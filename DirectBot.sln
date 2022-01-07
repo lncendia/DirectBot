@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.API", "DirectBot.API\DirectBot.API.csproj", "{60B18918-556A-4C89-A441-F2EFD889C816}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.Core", "DirectBot.Core\DirectBot.Core.csproj", "{84458E57-16FF-485A-86AB-FB273B66208F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.DAL", "DirectBot.DAL\DirectBot.DAL.csproj", "{9D83FE2D-6620-4BAC-B708-7893866B40A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.BLL", "DirectBot.BLL\DirectBot.BLL.csproj", "{00D6309B-8F48-4E32-81D9-30882FD56EBD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60B18918-556A-4C89-A441-F2EFD889C816}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60B18918-556A-4C89-A441-F2EFD889C816}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60B18918-556A-4C89-A441-F2EFD889C816}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60B18918-556A-4C89-A441-F2EFD889C816}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84458E57-16FF-485A-86AB-FB273B66208F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84458E57-16FF-485A-86AB-FB273B66208F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84458E57-16FF-485A-86AB-FB273B66208F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84458E57-16FF-485A-86AB-FB273B66208F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D83FE2D-6620-4BAC-B708-7893866B40A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D83FE2D-6620-4BAC-B708-7893866B40A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D83FE2D-6620-4BAC-B708-7893866B40A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D83FE2D-6620-4BAC-B708-7893866B40A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00D6309B-8F48-4E32-81D9-30882FD56EBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00D6309B-8F48-4E32-81D9-30882FD56EBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00D6309B-8F48-4E32-81D9-30882FD56EBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00D6309B-8F48-4E32-81D9-30882FD56EBD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
