@@ -3,7 +3,7 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Services;
 
-public interface IUserService : IService<User>
+public interface IUserService : IService<UserDTO>
 {
-    public Task<IResult<int>> GetCount();
+    public Task<int> GetCountAsync();
 }

@@ -1,4 +1,5 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using User = DirectBot.Core.Models.User;
@@ -7,7 +8,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class ListOfWorksQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query, ServiceContainer serviceContainer)
     {
         if (user.State != State.Main)
         {

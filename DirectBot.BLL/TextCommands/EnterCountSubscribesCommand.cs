@@ -1,52 +1,50 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.TextCommands;
 
 public class EnterCountSubscribesCommand : ITextCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
         if (!int.TryParse(message.Text, out var count))
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Введите число!", replyMarkup: Keyboards.Main);
+            await client.SendTextMessageAsync(message.From!.Id,
+                "Введите число!", replyMarkup: MainKeyboard.Main);
             return;
         }
 
         if (count > 100)
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Слишком большое количество!", replyMarkup: Keyboards.Main);
+            await client.SendTextMessageAsync(message.From!.Id,
+                "Слишком большое количество!", replyMarkup: MainKeyboard.Main);
             return;
         }
 
-        string billId = "";
-        int bonus = count * BotSettings.Cfg.Bonus >= user.Bonus ? user.Bonus : count * BotSettings.Cfg.Bonus;
-        var payUrl = new Payment().AddTransaction(count * BotSettings.Cfg.Cost - bonus, user, count, ref billId);
-        if (payUrl == null)
+        var payment = await serviceContainer.PaymentService.CreateBillAsync(user!, count);
+        if (payment.Succeeded)
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Произошла ошибка при создании счета. Попробуйте еще раз.", replyMarkup: Keyboards.Main);
-            return;
+            user!.State = State.Main;
+            await serviceContainer.UserService.UpdateAsync(user);
+            await client.SendTextMessageAsync(message.From!.Id,
+                $"💸 Оплата подписки на сумму {payment.Value!.Cost}₽.\n📆 Дата: {DateTime.Now:dd.MMM.yyyy}\n❌ Статус: Не оплачено.\n\n💳 Оплатите счет.",
+                replyMarkup: PaymentKeyboard.CheckBill(payment.Value));
         }
-
-            
-            
-        user.Bonus -= bonus;
-            
-        user.State = State.Main;
-
-        await client.SendTextMessageAsync(message.From.Id,
-            $"💸 Оплата подписки на сумму {count * BotSettings.Cfg.Cost}₽ из которых {bonus}₽ списанно с бонусного счета.\n📆 Дата: {DateTime.Now:dd.MMM.yyyy}\n❌ Статус: Не оплачено.\n\n💳 Оплатите счет по ссылке.\n{payUrl}",
-            replyMarkup: Keyboards.CheckBill(billId));
+        else
+        {
+            await client.SendTextMessageAsync(message.From!.Id,
+                $"Произошла ошибка при создании счета ({payment.ErrorMessage}). Попробуйте еще раз.",
+                replyMarkup: MainKeyboard.Main);
+        }
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return message.Type == MessageType.Text && user.State == State.EnterCountToBuy;
+        return message.Type == MessageType.Text && user!.State == State.EnterCountToBuy;
     }
 }

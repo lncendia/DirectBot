@@ -1,4 +1,5 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -8,7 +9,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class GoBackQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query, ServiceContainer serviceContainer)
     {
         switch (query.Data[5..])
         {
@@ -22,7 +23,7 @@ public class GoBackQueryCommand : ICallbackQueryCommand
                     break;
                 }
 
-                user.State = State.EnterLogin;
+                user.State = State.EnterInstagramData;
                 await client.DeleteMessageAsync(query.From.Id,
                     query.Message.MessageId);
                 await client.SendTextMessageAsync(query.From.Id,

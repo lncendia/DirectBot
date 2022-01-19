@@ -1,23 +1,26 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class StartNowQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        await client.DeleteMessageAsync(query.From.Id,
-            query.Message.MessageId);
-        user.CurrentWorks.ForEach(async x => await x.StartAsync());
-        user.CurrentWorks.Clear();
+        user!.CurrentWorks.ForEach(work => work.JobId = serviceContainer.WorkerService.StartWork(work));
         user.State = State.Main;
+        user.CurrentWorks.Clear();
+        await serviceContainer.UserService.UpdateAsync(user);
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+            "Задачи успешно запущены, вы в главном меню.");
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data == "startNow" && user.State == State.SetTimeWork;
+        return query.Data == "startNow" && user!.State == State.SelectTimeMode;
     }
 }

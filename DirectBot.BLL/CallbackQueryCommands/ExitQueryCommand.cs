@@ -1,33 +1,55 @@
-﻿using Telegram.Bot;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
+using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class ExitQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        if (query.Data.StartsWith("exit"))
+        if (user!.State != State.Main)
         {
-            var instagram = user.Instagrams.FirstOrDefault(_ => _.Id == int.Parse(query.Data[5..]));
-            if (instagram == null)
-            {
-                await client.AnswerCallbackQueryAsync(query.Id, "Инстаграм не найден.");
-                await client.DeleteMessageAsync(query.From.Id, query.Message.MessageId);
-            }
-            else
-            {
-                //TODO: Check for active works
-                string message = (await InstagramLoginService.DeactivateAsync(instagram)) ? "Успешно." : "Не удалось выйти.";
-                await client.AnswerCallbackQueryAsync(query.Id, message);
-                await client.DeleteMessageAsync(query.From.Id, query.Message.MessageId);
-            }
+            await client.AnswerCallbackQueryAsync(query.Id, "Вы должны быть в главное меню.");
+            return;
+        }
+
+        var id = long.Parse(query.Data![5..]);
+        var instagram = await serviceContainer.InstagramService.GetAsync(id);
+        if (instagram == null || instagram.User != user)
+        {
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "Вы не можете выйти из этого инстаграма.");
+            return;
+        }
+
+        if (await serviceContainer.WorkService.HasActiveWorksAsync(instagram))
+        {
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "На этом аккаунте есть незавершенные задачи.");
+            return;
+        }
+
+        if (instagram.IsActive) await serviceContainer.InstagramLoginService.DeactivateAsync(instagram);
+        var result = await serviceContainer.InstagramService.DeleteAsync(instagram);
+
+        if (result.Succeeded)
+        {
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "Аккаунт успешно удалён.");
+        }
+        else
+        {
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                $"Ошибка при удалении аккаунта ({result.ErrorMessage}).");
         }
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data.StartsWith("exit");
+        return query.Data!.StartsWith("exit");
     }
 }

@@ -1,25 +1,35 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.TextCommands;
 
 public class AccountsCommand : ITextCommand
 {
     private readonly Random _rnd = new();
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
-        foreach (var x in user.Instagrams)
+        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsAsync(user!);
+        var subscribes = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user!);
+        foreach (var x in instagrams)
         {
+            int count = x.Password.Length / 2;
+            var offsetLength = (x.Password.Length - count) / 2;
+
+            string password = x.Password[..offsetLength] + new String('*', count) +
+                              x.Password[(offsetLength + count)..];
             await client.SendTextMessageAsync(message.Chat.Id,
-                $"{Keyboards.Emodji[_rnd.Next(0, Keyboards.Emodji.Length)]} Аккаунт {x.Username}",
-                replyMarkup: Keyboards.Exit(x.Id));
+                $"Имя пользователя: <code>{x.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
+                replyMarkup: InstagramLoginKeyboard.InstagramMain(x.Id, x.IsActive));
         }
 
-        if (user.Instagrams.Count < user.Subscribes.Count)
+        if (instagrams.Count < subscribes)
             await client.SendTextMessageAsync(message.Chat.Id,
                 "Вы можете добавить аккаунт",
                 replyMarkup: new InlineKeyboardMarkup(
@@ -27,13 +37,12 @@ public class AccountsCommand : ITextCommand
         else
         {
             await client.SendTextMessageAsync(message.Chat.Id,
-                "Оплатите подписку, чтобы добавить аккаунт.", replyMarkup: Keyboards.MainKeyboard);
+                "Оплатите подписку, чтобы добавить аккаунт.");
         }
-
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return message.Type == MessageType.Text && message.Text == "🌇 Мои аккаунты" && user.State == State.Main;
+        return message.Type == MessageType.Text && message.Text == "🌇 Мои аккаунты" && user!.State == State.Main;
     }
 }

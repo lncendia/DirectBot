@@ -1,43 +1,37 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.TextCommands;
 
 public class EnterDateCommand : ITextCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
         if (TimeSpan.TryParse(message.Text, out var timeSpan))
         {
-            var timeEnter = DateTime.Today.Add(timeSpan);
-            if (timeEnter.CompareTo(DateTime.Now) <= 0)
-            {
-                timeEnter = timeEnter.AddDays(1);
-            }
-
-            user.CurrentWorks.ForEach(_ => _?.StartAtTimeAsync(timeEnter));
-            foreach (var work in user.CurrentWorks.Where(work => work != null))
-            {
-                await client.SendTextMessageAsync(message.From.Id,
-                    $"Отработка на аккаунте {work.Instagram.Username} по хештегу #{work.Hashtag} начнётся в {timeEnter:HH:mm:ss}.",
-                    replyMarkup: Keyboards.Cancel(work.Id));
-            }
-
-            user.CurrentWorks.Clear();
+            var timeEnter = DateTimeOffset.Now.Add(timeSpan.Duration());
+            user!.CurrentWorks.ForEach(
+                work => work.JobId = serviceContainer.WorkerService.ScheduleWork(work, timeEnter));
             user.State = State.Main;
+            user.CurrentWorks.Clear();
+            await serviceContainer.UserService.UpdateAsync(user);
+            await client.SendTextMessageAsync(user.Id, "Задачи успешно поставлены в очередь, вы в главном меню.");
         }
         else
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Неверный формат времени.", replyMarkup:Keyboards.Back("date"));
+            await client.SendTextMessageAsync(message.From!.Id,
+                "Неверный формат времени! Попробуйте ещё раз.\nФормат: <code>[ЧЧ:мм]</code>", ParseMode.Html,
+                replyMarkup: MainKeyboard.Main);
         }
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return message.Type == MessageType.Text && user.State == State.SetDate;
+        return message.Type == MessageType.Text && user!.State == State.SetDate;
     }
 }

@@ -1,25 +1,27 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class StartLaterQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        await client.DeleteMessageAsync(query.From.Id,
-            query.Message.MessageId);
-        user.State = State.SetDate;
+        user!.State = State.SetDate;
+        await serviceContainer.UserService.UpdateAsync(user);
         await client.SendTextMessageAsync(query.From.Id,
-            "Введите время запуска по МСК в формате ЧЧ:мм. (<strong>Пример:</strong> <em>13:30</em>).",
-            replyMarkup: Keyboards.Back("date"), parseMode: ParseMode.Html);
+            "Через сколько вы хотите начать работу? В формате: <code>[ЧЧ:мм]</code>", ParseMode.Html,
+            replyMarkup: MainKeyboard.Main);
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data == "startLater" && user.State == State.SetTimeWork;
+        return query.Data == "startLater" && user!.State == State.SelectTimeMode;
     }
 }

@@ -1,14 +1,12 @@
-﻿using DirectBot.Core.Services;
+﻿using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.Interfaces;
 
 public interface ITextCommand
 {
-    public Task Execute(ITelegramBotClient client, User? user, Message message, IUserService userService, 
-        Core.Configuration.Configuration configuration);
+    public Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer);
 
-    public bool Compare(Message message, User? user);
+    public bool Compare(Message message, UserDTO? user);
 }

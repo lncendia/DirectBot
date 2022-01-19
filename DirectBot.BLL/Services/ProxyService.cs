@@ -1,56 +1,56 @@
-﻿namespace DirectBot.BLL.Services;
+﻿using DirectBot.Core.Interfaces;
+using DirectBot.Core.Models;
+using DirectBot.Core.Repositories;
+using DirectBot.Core.Services;
 
-public class ProxyService
+namespace DirectBot.BLL.Services;
+
+public class ProxyService : IProxyService
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IProxyRepository _proxyRepository;
+    private readonly IInstagramService _instagramService;
 
-    public ProxyService(ApplicationDbContext db)
+    public ProxyService(IProxyRepository proxyRepository, IInstagramService instagramService)
     {
-        _db = db;
+        _proxyRepository = proxyRepository;
+        _instagramService = instagramService;
     }
 
-    public SelectList GetCountries()
+    public async Task<IOperationResult> SetProxyAsync(InstagramDTO instagram)
     {
-        return new SelectList(_db.Proxies.Select(proxy => proxy.Country).Distinct().ToList());
-    }
-
-    public void SetProxy(Instagram instagram)
-    {
-        var proxy = _db.Proxies.FromSqlRaw("SELECT * FROM instaq.proxies ORDER BY rand()")
-            .FirstOrDefault(proxy1 => proxy1.Country == instagram.Country);
-        if (proxy == null) return;
+        var proxy = await _proxyRepository.GetRandomProxyAsync();
+        if (proxy == null) return OperationResult.Fail("Proxy not found");
         instagram.Proxy = proxy;
-        _db.SaveChangesAsync();
+        return await _instagramService.UpdateAsync(instagram);
     }
 
-    public bool DeleteProxy(Proxy proxy)
+    public async Task<IOperationResult> DeleteProxyAsync(ProxyDTO proxy)
     {
         try
         {
-            _db.Proxies.Remove(proxy);
-            _db.SaveChanges();
-            return true;
+            await _proxyRepository.DeleteAsync(proxy);
+            return OperationResult.Ok();
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
+            return OperationResult.Fail(ex.Message);
         }
     }
 
-    public bool AddProxy(string proxies)
-    {
-        string[] proxyArray = proxies.Split('\n');
-        foreach (var proxyString in proxyArray)
-        {
-            var data = proxyString.Split(":", 5);
-            if (data.Length != 5) return false;
-            if (!Org.BouncyCastle.Utilities.Net.IPAddress.IsValid(data[0])) return false;
-            if (!int.TryParse(data[1], out int port)) return false;
-            _db.Add(new Proxy()
-                { Host = data[0], Port = port, Login = data[2], Password = data[3], Country = data[4].ToUpper()});
-        }
-
-        _db.SaveChanges();
-        return true;
-    }
+    // public Task<IOperationResult> AddProxyAsync(string proxies)
+    // {
+    //     string[] proxyArray = proxies.Split('\n');
+    //     foreach (var proxyString in proxyArray)
+    //     {
+    //         var data = proxyString.Split(":", 5);
+    //         if (data.Length != 5) return false;
+    //         if (!Org.BouncyCastle.Utilities.Net.IPAddress.IsValid(data[0])) return false;
+    //         if (!int.TryParse(data[1], out int port)) return false;
+    //         _db.Add(new Proxy()
+    //             {Host = data[0], Port = port, Login = data[2], Password = data[3], Country = data[4].ToUpper()});
+    //     }
+    //
+    //     _db.SaveChanges();
+    //     return true;
+    // }
 }

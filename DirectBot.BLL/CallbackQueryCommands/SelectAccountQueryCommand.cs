@@ -1,68 +1,39 @@
-﻿using DirectBot.Core.Enums;
+using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class SelectAccountQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        user.State = State.Block;
-        Instagram inst = user.Instagrams.Find(x => x.Id == int.Parse(query.Data[7..]));
-        if (inst == null)
+        var id = long.Parse(query.Data![7..]);
+        var instagram = await serviceContainer.InstagramService.GetAsync(id);
+        if (instagram == null || instagram.User != user)
         {
-            user.State = State.SelectAccounts;
-            await client.AnswerCallbackQueryAsync(query.Id, "Инстаграм не найден.");
-            await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId,
-                query.Message.Text,
-                replyMarkup: Keyboards.NewSelect(
-                    query.Message.ReplyMarkup.InlineKeyboard.ToList(),
-                    query));
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "Вы не можете добавить этот инстаграм.");
             return;
         }
 
-        if (inst.IsDeactivated)
+        var work = new WorkDTO
         {
-            user.State = State.SelectAccounts;
-            await client.AnswerCallbackQueryAsync(query.Id,
-                $"Аккаунт {inst.Username} деактивирован. Купите подписку, чтобы активировать аккаунт.");
-            await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId,
-                query.Message.Text,
-                replyMarkup: Keyboards.NewSelect(
-                    query.Message.ReplyMarkup.InlineKeyboard.ToList(),
-                    query));
-            return;
-        }
-
-        if (user.CurrentWorks.FirstOrDefault(x => x.Instagram.Username == inst.Username) != null)
-        {
-            user.State = State.SelectAccounts;
-            await client.AnswerCallbackQueryAsync(query.Id,
-                $"Аккаунт {inst.Username} уже добавлен.");
-            await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId,
-                query.Message.Text,
-                replyMarkup: Keyboards.NewSelect(
-                    query.Message.ReplyMarkup.InlineKeyboard.ToList(),
-                    query));
-            return;
-        }
-
-        await client.AnswerCallbackQueryAsync(query.Id,
-            $"Инстаграм {inst.Username} успешно добавлен.");
-        await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId,
-            query.Message.Text,
-            replyMarkup: Keyboards.NewSelect(query.Message.ReplyMarkup.InlineKeyboard.ToList(),
-                query));
-        var work = new Work(user.Works.Count, inst, user);
+            Instagram = instagram
+        };
         user.CurrentWorks.Add(work);
-        user.State = State.SelectAccounts;
+        await serviceContainer.UserService.UpdateAsync(user);
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+            "Выберите аккаунты:",
+            replyMarkup: WorkingKeyboard.NewSelect(query.Message.ReplyMarkup!.InlineKeyboard.ToList()!, query.Data));
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data.StartsWith("select_") && user.State == State.SelectAccounts;
+        return query.Data!.StartsWith("select") && user!.State == State.SelectAccounts;
     }
 }

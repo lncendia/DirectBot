@@ -1,50 +1,105 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DirectBot.BLL.TextCommands;
 
 public class EnterTwoFactorCommand : ITextCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
-        var x = await InstagramLoginService.EnterTwoFactorAsync(user.CurrentInstagram, message.Text);
-        if (x is not { Succeeded: true })
+        if (user!.CurrentInstagram == null)
         {
-            await client.SendTextMessageAsync(message.From.Id,
+            await client.SendTextMessageAsync(message.From!.Id,
                 "Ошибка. Попробуйте войти ещё раз.");
             user.State = State.Main;
+            await serviceContainer.UserService.UpdateAsync(user);
             return;
         }
 
+        var x = await serviceContainer.InstagramLoginService.EnterTwoFactorAsync(user.CurrentInstagram, message.Text!);
         switch (x.Value)
         {
-            case InstaLoginTwoFactorResult.Success:
+            case LoginTwoFactorResult.Success:
             {
-                await InstagramLoginService.SendRequestsAfterLoginAsync(user.CurrentInstagram);
+                await serviceContainer.InstagramLoginService.SendRequestsAfterLoginAsync(user.CurrentInstagram);
+                user.CurrentInstagram.IsActive = true;
+                await serviceContainer.InstagramService.UpdateAsync(user.CurrentInstagram);
+                await client.SendTextMessageAsync(message.From!.Id,
+                    "Инстаграм успешно активирован.");
                 user.CurrentInstagram = null;
-                await client.SendTextMessageAsync(message.From.Id,
-                    "Инстаграм успешно добавлен.");
                 user.State = State.Main;
                 break;
             }
-            case InstaLoginTwoFactorResult.InvalidCode:
-                await client.SendTextMessageAsync(message.From.Id,
-                    "Неверный код, попробуйте еще раз.", replyMarkup: Keyboards.Main);
+            case LoginTwoFactorResult.InvalidCode:
+                await client.SendTextMessageAsync(message.From!.Id,
+                    "Неверный код, попробуйте еще раз.", replyMarkup: MainKeyboard.Main);
+                return;
+            case LoginTwoFactorResult.CodeExpired:
+                await client.SendTextMessageAsync(message.From!.Id,
+                    "Время действия кода истекло, попробуйте еще раз.", replyMarkup: MainKeyboard.Main);
+                return;
+            case LoginTwoFactorResult.ChallengeRequired:
+            {
+                var challenge = await serviceContainer.InstagramLoginService.GetChallengeAsync(user.CurrentInstagram);
+                if (!challenge.Succeeded)
+                {
+                    await client.SendTextMessageAsync(message.From!.Id,
+                        $"Ошибка: ({challenge.ErrorMessage}). Попробуйте войти ещё раз.");
+                    user.State = State.Main;
+                    user.CurrentInstagram = null;
+                    break;
+                }
+
+                if (challenge.Value!.SubmitPhoneRequired)
+                {
+                    user.State = State.ChallengeRequiredPhoneCall;
+                    await client.SendTextMessageAsync(message.From!.Id,
+                        "Инстаграм просит подтверждение. Введите подключенный к аккаунту номер.",
+                        replyMarkup: MainKeyboard.Main);
+                    break;
+                }
+
+                InlineKeyboardMarkup key;
+                if (string.IsNullOrEmpty(challenge.Value.PhoneNumber))
+                {
+                    key = InstagramLoginKeyboard.Email(challenge.Value.Email!);
+                }
+                else if (string.IsNullOrEmpty(challenge.Value.Email))
+                {
+                    key = InstagramLoginKeyboard.Phone(challenge.Value.PhoneNumber);
+                }
+                else
+                {
+                    key = InstagramLoginKeyboard.PhoneAndEmail(challenge.Value.Email,
+                        challenge.Value.PhoneNumber);
+                }
+
+                user.State = State.ChallengeRequired;
+                await client.SendTextMessageAsync(message.From!.Id,
+                    "Инстаграм просит подтверждение. Выбирете, каким образом вы хотите получить код:",
+                    replyMarkup: key);
+            }
                 break;
+            case LoginTwoFactorResult.Exception:
             default:
-                await client.SendTextMessageAsync(message.From.Id,
-                    "Ошибка. Попробуйте войти ещё раз.");
-                db.Remove(user.CurrentInstagram);
+                await client.SendTextMessageAsync(message.From!.Id,
+                    $"Ошибка при отправке запроса ({x.ErrorMessage}). Попробуйте войти ещё раз.");
                 user.State = State.Main;
+                user.CurrentInstagram = null;
                 break;
         }
+
+        await serviceContainer.UserService.UpdateAsync(user);
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return message.Type == MessageType.Text && user.State == State.EnterTwoFactorCode;
+        return message.Type == MessageType.Text && user!.State == State.EnterTwoFactorCode;
     }
 }

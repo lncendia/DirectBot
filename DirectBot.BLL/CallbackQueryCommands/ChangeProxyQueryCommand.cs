@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using DirectBot.BLL.Interfaces;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using User = DirectBot.Core.Models.User;
 
@@ -6,7 +7,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class ChangeProxyQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query, ServiceContainer serviceContainer)
     {
         if (query.Data.StartsWith("changeProxy"))
         {
@@ -22,8 +23,6 @@ public class ChangeProxyQueryCommand : ICallbackQueryCommand
                 await client.AnswerCallbackQueryAsync(query.Id, message);
                 await client.DeleteMessageAsync(query.From.Id, query.Message.MessageId);
             }
-
-            return;
         }
     }
 

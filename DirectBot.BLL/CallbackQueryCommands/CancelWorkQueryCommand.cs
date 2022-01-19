@@ -1,4 +1,6 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using User = DirectBot.Core.Models.User;
@@ -7,40 +9,38 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class CancelWorkQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        if (user.State != State.Main)
+        if (user!.State != State.Main)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Вы должны быть в главное меню.");
             return;
         }
-        Work work = user.Works.Find(x => x.Id == int.Parse(query.Data[7..]));
-        if (work == null)
+
+        var id = long.Parse(query.Data![7..]);
+        var work = await serviceContainer.WorkService.GetAsync(id);
+        if (work == null || work.Instagram.User != user)
         {
-            user.State = State.Main;
-            await client.AnswerCallbackQueryAsync(query.Id, "Отработка не найдена.");
-            await client.DeleteMessageAsync(query.From.Id, query.Message.MessageId);
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "Вы не можете отменить эту задачу.");
             return;
         }
 
-        if (work.IsStarted)
+        if (work.IsCompleted)
         {
-            work.CancelTokenSource.Cancel();
+            await client.AnswerCallbackQueryAsync(query.Id, "Задача уже завершена.");
         }
         else
         {
-            await work.TimerDisposeAsync();
+            var result = await serviceContainer.WorkerService.CancelWorkAsync(work);
+            if (result.Succeeded) await client.AnswerCallbackQueryAsync(query.Id, "Задача успешно отменена.");
+            else await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.", true);
         }
-
-        user.Works.Remove(work);
-        await client.AnswerCallbackQueryAsync(query.Id, "Отработка отменена.");
-        await client.DeleteMessageAsync(query.From.Id,
-            query.Message.MessageId);
-        user.State = State.Main;
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, User? user)
     {
-        return query.Data.StartsWith("cancel");
+        return query.Data!.StartsWith("cancel");
     }
 }

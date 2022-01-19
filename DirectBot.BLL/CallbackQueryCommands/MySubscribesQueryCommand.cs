@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using DirectBot.BLL.Interfaces;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using User = DirectBot.Core.Models.User;
 
@@ -6,7 +7,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class MySubscribesQueryCommand:ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query, ServiceContainer serviceContainer)
     {
         string subscribes = $"У вас {user.Subscribes.Count} подписки(ок).\n";
         int i = 0;

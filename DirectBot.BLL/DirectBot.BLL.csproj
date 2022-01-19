@@ -8,11 +8,39 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DirectBot.Core\DirectBot.Core.csproj" />
+      <ProjectReference Include="..\DirectBot.DAL\DirectBot.DAL.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Hangfire" Version="1.7.28" />
+      <PackageReference Include="Hangfire.MySqlStorage" Version="2.0.3" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+      <PackageReference Include="Qiwi.BillPayments" Version="0.1.5" />
+      <PackageReference Include="RestSharp" Version="107.0.1" />
       <PackageReference Include="Telegram.Bot" Version="17.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Keyboards\AdminKeyboard" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="TextCommands\EnterSubscribeDataCommand.cs" />
+      <Compile Remove="TextCommands\EnterDurationCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\MySubscribesQueryCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\ListOfWorksQueryCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\CancelWorkQueryCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\GoBackQueryCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\ChangeProxyQueryCommand.cs" />
+      <Compile Remove="CallbackQueryCommands\SelectModeQueryCommand.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="InstagramApiSharp, Version=1.7.1.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>C:\Users\egorl\Desktop\InstagramApiSharp.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

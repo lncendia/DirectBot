@@ -1,129 +1,118 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.TextCommands;
 
-public class EnterMessageToMailingCommand:ITextCommand
+public class EnterMessageToMailingCommand : ITextCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
-        List<User> users = db.Users.ToList();
+        var users = await serviceContainer.UserService.GetAllAsync();
         switch (message.Type)
         {
             case MessageType.Text:
-                foreach (var member in users)
+                var tasks = users.Select(user1 => client.SendTextMessageAsync(user1.Id, message.Text!));
+                try
                 {
-                    try
-                    {
-                        await client.SendTextMessageAsync(member.Id, message.Text);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Photo:
-                foreach (var member in users)
+                tasks = users.Select(user1 => client.SendPhotoAsync(user1.Id,
+                    new InputMedia(message.Photo!.Last().FileId), message.Caption));
+                try
                 {
-                    try
-                    {
-                        await client.SendPhotoAsync(member.Id,
-                            new InputMedia(message.Photo.Last().FileId), caption: message.Caption);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Audio:
-                foreach (var member in users)
+                tasks = users.Select(user1 =>
+                    client.SendAudioAsync(user1.Id, new InputMedia(message.Audio!.FileId)));
+                try
                 {
-                    try
-                    {
-                        await client.SendAudioAsync(member.Id, new InputMedia(message.Audio.FileId));
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Video:
-                foreach (var member in users)
+                tasks = users.Select(user1 => client.SendVideoAsync(user1.Id, new InputMedia(message.Video!.FileId),
+                    caption: message.Caption));
+                try
                 {
-                    try
-                    {
-                        await client.SendVideoAsync(member.Id, new InputMedia(message.Video.FileId),
-                            caption: message.Caption);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Voice:
-                foreach (var member in users)
+                tasks = users.Select(user1 => client.SendVoiceAsync(user1.Id, new InputMedia(message.Voice!.FileId)));
+                try
                 {
-                    try
-                    {
-                        await client.SendVoiceAsync(member.Id, new InputMedia(message.Voice.FileId));
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Document:
-                foreach (var member in users)
+                tasks = users.Select(user1 => client.SendDocumentAsync(user1.Id,
+                    new InputMedia(message.Document!.FileId)));
+                try
                 {
-                    try
-                    {
-                        await client.SendDocumentAsync(member.Id,
-                            new InputMedia(message.Document.FileId));
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
             case MessageType.Sticker:
-                foreach (var member in users)
+                tasks = users.Select(user1 => client.SendPhotoAsync(user1.Id, new InputMedia(message.Sticker!.FileId)));
+                try
                 {
-                    try
-                    {
-                        await client.SendPhotoAsync(member.Id, new InputMedia(message.Sticker.FileId));
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    await Task.WhenAll(tasks);
+                }
+                catch
+                {
+                    // ignored
                 }
 
                 break;
         }
 
-        await client.SendTextMessageAsync(user.Id,
-            "Сообщение было успешно отправлено. Вы в главном меню.",
-            replyMarkup: Keyboards.MainKeyboard);
+        GC.Collect();
+        await client.SendTextMessageAsync(user!.Id,
+            "Сообщение было успешно отправлено. Вы в главном меню.");
         user.State = State.Main;
+        await serviceContainer.UserService.UpdateAsync(user);
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return user.State == State.MailingAdmin;
+        return user!.State == State.MailingAdmin;
     }
 }

@@ -1,7 +1,6 @@
 using DirectBot.BLL.CallbackQueryCommands;
 using DirectBot.BLL.Interfaces;
 using DirectBot.BLL.TextCommands;
-using DirectBot.Core.Interfaces;
 using DirectBot.Core.Services;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -12,37 +11,63 @@ namespace DirectBot.BLL.Services;
 
 public class UpdateHandler : IUpdateHandler<Update>
 {
-    private readonly IUserService _userService;
-    private readonly Core.Configuration.Configuration _configuration;
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<UpdateHandler> _logger;
+    private readonly ServiceContainer _serviceContainer;
 
     public UpdateHandler(IUserService userService, Core.Configuration.Configuration configuration,
-        ITelegramBotClient botClient, ILogger<UpdateHandler> logger)
+        ITelegramBotClient botClient, ILogger<UpdateHandler> logger, IWorkerService workerService,
+        ISubscribeService subscribeService, IProxyService proxyService, IPaymentService paymentService,
+        IWorkService workService, IInstagramService instagramService,
+        IInstagramLoginService instagramLoginService)
     {
-        _userService = userService;
-        _configuration = configuration;
         _botClient = botClient;
         _logger = logger;
+
+        _serviceContainer = new ServiceContainer(userService, workerService, subscribeService, proxyService,
+            paymentService, instagramLoginService, instagramService, workService, configuration);
     }
 
     private static readonly List<ITextCommand> TextCommands = new()
     {
         new StartCommand(),
-        new AdminMailingCommand(),
-        new AdminStatsCommand(),
-        new AdminInfoCommand(),
-        new AdminDeleteCommand(),
-        new EnterMessageToMailingCommand(),
         new SendKeyboardCommand(),
+        new EnterChallengeRequireCodeCommand(),
+        new EnterCountSubscribesCommand(),
+        new EnterInstagramDataCommand(),
+        new EnterMessageToMailingCommand(),
+        new EnterPhoneNumberCommand(),
+        new EnterTwoFactorCommand(),
+        new EnterOffsetCommand(),
+        new EnterDateCommand(),
+        new EnterMessageCommand(),
+        new AdminMailingCommand(),
+        new AdminSubscribesCommand(),
+
+        //Do not depend on the state
+        new HelpCommand(),
+        new InstructionCommand(),
+        new PaymentCommand(),
+        new WorkCommand(),
+        new AccountsCommand(),
     };
 
     private static readonly List<ICallbackQueryCommand> CallbackQueryCommands = new()
     {
-        new CheckQueryCommand(),
-        new StatsQueryCommand(),
-        new InfoQueryCommand(),
-        new DeleteQueryCommand()
+        new ActiveInstagramQueryCommand(),
+        new BillQueryCommand(),
+        new ChallengeEmailQueryCommand(),
+        new ChallengePhoneQueryCommand(),
+        new StartEnterAccountDataQueryCommand(),
+        new ExitQueryCommand(),
+        new ReLogInQueryCommand(),
+        new ContinueSelectQueryCommand(),
+        new MainMenuQueryCommand(),
+        new SelectAllAccountsQueryCommand(),
+        new SelectAccountQueryCommand(),
+        new StartLaterQueryCommand(),
+        new StartNowQueryCommand(),
+        new StartWorkingQueryCommand()
     };
 
     public async Task HandleAsync(Update update)
@@ -82,17 +107,18 @@ public class UpdateHandler : IUpdateHandler<Update>
 
     private async Task BotOnCallbackQueryReceived(CallbackQuery updateCallbackQuery)
     {
-        var user = _userService.Get(updateCallbackQuery.From.Id);
+        var user = await _serviceContainer.UserService.GetAsync(updateCallbackQuery.From.Id);
+
         var command = CallbackQueryCommands.FirstOrDefault(command => command.Compare(updateCallbackQuery, user));
         if (command != null)
-            await command.Execute(_botClient, user, updateCallbackQuery, _userService, _configuration);
+            await command.Execute(_botClient, user, updateCallbackQuery, _serviceContainer);
     }
 
     private async Task BotOnMessageReceived(Message updateMessage)
     {
-        var user = _userService.Get(updateMessage.From!.Id);
+        var user = await _serviceContainer.UserService.GetAsync(updateMessage.From!.Id);
         var command = TextCommands.FirstOrDefault(command => command.Compare(updateMessage, user));
         if (command != null)
-            await command.Execute(_botClient, user, updateMessage, _userService, _configuration);
+            await command.Execute(_botClient, user, updateMessage, _serviceContainer);
     }
 }

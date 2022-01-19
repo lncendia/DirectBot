@@ -19,9 +19,9 @@ public class Result<T> : IResult<T>
     {
         return new Result<T>(true, null, value);
     }
-
-    public static Result<T> Fail(string message)
+    
+    public static Result<T> Fail(string message, T? value = default)
     {
-        return new Result<T>(false, message, default);
+        return new Result<T>(false, message, value);
     }
 }

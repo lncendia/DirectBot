@@ -1,6 +1,8 @@
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
+using Microsoft.EntityFrameworkCore;
+using User = DirectBot.DAL.Models.User;
 
 namespace DirectBot.DAL.Repositories;
 
@@ -13,35 +15,42 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public List<User> GetAll()
+    public Task<List<User>> GetAllAsync()
     {
-        return _context.Users.ToList();
+        return _context.Users.ToListAsync();
     }
 
-    public void Add(User entity)
+    public async Task AddAsync(User entity)
     {
-        _context.Add(entity);
-        _context.SaveChanges();
+        await _context.AddAsync(entity);
+        await _context.SaveChangesAsync();
     }
 
-    public void Delete(User entity)
+    public async Task DeleteAsync(User entity)
     {
+        await _context.Entry(entity).Collection(user1 => user1.Instagrams!).Query()
+            .Include(instagram => instagram.Works).LoadAsync();
+        await _context.Entry(entity).Collection(user1 => user1.Subscribes!).LoadAsync();
+        _context.RemoveRange(entity.Instagrams!.SelectMany(instagram => instagram.Works!));
+        _context.RemoveRange(entity.Instagrams!);
+        _context.RemoveRange(entity.Subscribes!);
         _context.Remove(entity);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public void Update(User entity)
+    public async Task UpdateAsync(User entity)
     {
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public User? Get(long id)
+    public Task<User?> GetAsync(long id)
     {
-        return _context.Users.FirstOrDefault(user => user.Id == id);
+        return _context.Users.Include(user => user.CurrentInstagram).Include(user => user.CurrentWorks)
+            .FirstOrDefaultAsync(user => user.Id == id);
     }
-    
-    public int GetCount()
+
+    public async Task<int> GetCountAsync()
     {
-        return _context.Users.Count();
+        return await _context.Users.CountAsync();
     }
 }

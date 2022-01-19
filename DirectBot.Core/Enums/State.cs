@@ -2,23 +2,19 @@
 
 public enum State
 {
-    Main,
-    EnterLogin,
-    EnterPassword,
-    EnterTwoFactorCode,
+    // Block,
     ChallengeRequired,
     ChallengeRequiredAccept,
     ChallengeRequiredPhoneCall,
-    SelectAccounts,
-    SetMode,
-    SetHashtag,
-    SetDuration,
-    SetTimeWork,
-    SetOffset,
-    EnterOffset,
-    SetDate,
     EnterCountToBuy,
-    Block,
+    EnterInstagramData,
+    EnterOffset,
+    EnterMassage,
+    EnterTwoFactorCode,
     MailingAdmin,
+    Main,
+    SelectAccounts,
+    SelectTimeMode,
+    SetDate,
     SubscribesAdmin
 }

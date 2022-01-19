@@ -1,24 +1,34 @@
-﻿using DirectBot.Core.Enums;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class MainMenuQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        await client.DeleteMessageAsync(query.From.Id,
-            query.Message.MessageId);
-        db.RemoveRange(user.CurrentInstagram, user.CurrentWorks);
+        user!.CurrentInstagram = null;
+        foreach (var userCurrentWork in user.CurrentWorks.ToList()) //TODO: Remove ToList() if use DTOs, cause EF Remove entity after DeleteAsync
+        {
+            var result = await serviceContainer.WorkService.DeleteAsync(userCurrentWork);
+            if (result.Succeeded) continue;
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                $"Ошибка: {result.ErrorMessage}");
+            return;
+        }
+
         user.State = State.Main;
-        await client.SendTextMessageAsync(query.From.Id,
-            "Вы в главном меню.", replyMarkup: Keyboards.MainKeyboard);
+        await serviceContainer.UserService.UpdateAsync(user);
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+            "Вы в главном меню.");
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data == "mainMenu" && user.State != State.Block;
+        return query.Data == "mainMenu";
     }
 }

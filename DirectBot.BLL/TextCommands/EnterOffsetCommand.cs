@@ -1,36 +1,57 @@
-﻿using DirectBot.Core.Enums;
+using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.TextCommands;
 
-public class EnterOffsetCommand:ITextCommand
+public class EnterOffsetCommand : ITextCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, Message message, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
     {
-        if (!int.TryParse(message.Text, out var offset))
+        if (!user!.CurrentWorks.Any())
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Неверный формат!", replyMarkup: Keyboards.Back("offsetSelect"));
+            user.State = State.Main;
+            await serviceContainer.UserService.UpdateAsync(user);
+            await client.SendTextMessageAsync(message.Chat.Id,
+                "У вас нет активных задач. Вы в главном меню.");
             return;
         }
 
-        if (offset > 1020)
+        var data = message.Text!.Split(':');
+        if (data.Length != 2 || !int.TryParse(data[0], out int lower) || !int.TryParse(data[1], out int upper) ||
+            lower > upper || lower < 0 || upper < 0)
         {
-            await client.SendTextMessageAsync(message.From.Id,
-                "Слишком большой сдвиг!", replyMarkup: Keyboards.Back("offsetSelect"));
+            await client.SendTextMessageAsync(message.Chat.Id,
+                "Неверный формат данных! Попробуйте ещё раз.\nФормат: <code>[нижний предел:верхний предел]</code>",
+                ParseMode.Html, replyMarkup: MainKeyboard.Main);
             return;
         }
-        user.CurrentWorks.ForEach(_ => _.SetOffset(offset));
-        user.State = State.SetTimeWork;
-        await client.SendTextMessageAsync(user.Id,
-            "Выбирете, когда хотите начать.", replyMarkup: Keyboards.StartWork);
+
+        if (upper > 300)
+        {
+            await client.SendTextMessageAsync(message.Chat.Id, "Интервал не может быть больше 5 минут!",
+                replyMarkup: MainKeyboard.Main);
+            return;
+        }
+
+        user.CurrentWorks.ForEach(work =>
+        {
+            work.LowerInterval = lower;
+            work.UpperInterval = upper;
+        });
+        user.State = State.SelectTimeMode;
+        await serviceContainer.UserService.UpdateAsync(user);
+
+        await client.SendTextMessageAsync(message.Chat.Id,
+            "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
     }
 
-    public bool Compare(Message message, User user)
+    public bool Compare(Message message, UserDTO? user)
     {
-        return message.Type == MessageType.Text && user.State == State.EnterOffset;
+        return message.Type == MessageType.Text && user!.State == State.EnterOffset;
     }
 }

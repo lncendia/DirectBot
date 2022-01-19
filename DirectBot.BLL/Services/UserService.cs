@@ -14,16 +14,16 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public List<User> GetAll()
+    public Task<List<UserDTO>> GetAllAsync()
     {
-        return _userRepository.GetAll();
+        return _userRepository.GetAllAsync();
     }
 
-    public IOperationResult Delete(User entity)
+    public async Task<IOperationResult> DeleteAsync(UserDTO entity)
     {
         try
         {
-            _userRepository.Delete(entity);
+            await _userRepository.DeleteAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -32,21 +32,16 @@ public class UserService : IUserService
         }
     }
 
-    public User? Get(long id)
+    public Task<UserDTO?> GetAsync(long id)
     {
-        return _userRepository.Get(id);
+        return _userRepository.GetAsync(id);
     }
 
-    public void Update(User entity)
-    {
-        _userRepository.Update(entity);
-    }
-
-    public IOperationResult Add(User item)
+    public async Task<IOperationResult> UpdateAsync(UserDTO entity)
     {
         try
         {
-            _userRepository.Add(item);
+            await _userRepository.UpdateAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -54,17 +49,23 @@ public class UserService : IUserService
             return OperationResult.Fail(ex.Message);
         }
     }
-    
 
-    public IResult<int> GetCount()
+    public async Task<IOperationResult> AddAsync(UserDTO item)
     {
         try
         {
-            return Result<int>.Ok(_userRepository.GetCount());
+            await _userRepository.AddAsync(item);
+            return OperationResult.Ok();
         }
         catch (Exception ex)
         {
-            return Result<int>.Fail(ex.Message);
+            return OperationResult.Fail(ex.Message);
         }
+    }
+
+
+    public Task<int> GetCountAsync()
+    {
+        return _userRepository.GetCountAsync();
     }
 }

@@ -1,45 +1,42 @@
-﻿using Telegram.Bot;
+﻿using DirectBot.BLL.Interfaces;
+using DirectBot.Core.Models;
+using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class BillQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(TelegramBotClient client, User user, CallbackQuery query, Db db)
+    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        if (new Payment().CheckPay(user, query.Data[5..], db))
+        var payment = await serviceContainer.PaymentService.CheckPaymentAsync(query.Data![5..]);
+        if (payment.Succeeded)
         {
-            string message = query.Message.Text;
-            message = message.Replace("❌ Статус: Не оплачено", "✔ Статус: Оплачено");
-            message = message.Remove(message.IndexOf("Оплачено", StringComparison.Ordinal) + 8);
-            await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId,
-                message);
-            await client.AnswerCallbackQueryAsync(query.Id, "Успешно оплачено.");
-            if (user.Referal == null) return;
-                
-            db.UpdateRange(user, user.Referal);
-            user.Referal.Bonus += BotSettings.Cfg.Bonus;
-            try
+            var subscribe = new SubscribeDTO
             {
-                await client.SendTextMessageAsync(user.Referal.Id,
-                    $"По вашей реферальной ссылке перешел пользователь. Вам зачисленно {BotSettings.Cfg.Bonus} бонусных рублей.");
-            }
-            catch
+                User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
+            };
+            var result = await serviceContainer.SubscribeService.AddSubscribeAsync(subscribe);
+            if (!result.Succeeded)
             {
-                //ignored
+                await client.AnswerCallbackQueryAsync(query.Id, "Произошла ошибка при добавлении подписки.");
+                return;
             }
 
-            user.Referal = null;
-                
+            var message = query.Message!.Text!;
+            message = message.Replace("❌ Статус: Не оплачено", "✔ Статус: Оплачено");
+            message = message.Remove(message.IndexOf("Оплачено", StringComparison.Ordinal) + 8);
+            await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId, message);
+            await client.AnswerCallbackQueryAsync(query.Id, "Успешно оплачено.");
             return;
         }
 
         await client.AnswerCallbackQueryAsync(query.Id, "Не оплачено.");
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDTO? user)
     {
-        return query.Data.StartsWith("bill");
+        return query.Data!.StartsWith("bill");
     }
 }
