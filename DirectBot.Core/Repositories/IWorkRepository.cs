@@ -3,9 +3,10 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Repositories;
 
-public interface IWorkRepository : IRepository<WorkDTO>
+public interface IWorkRepository : IRepository<WorkDto, int>
 {
-    Task<List<WorkDTO>> GetInstagramWorksAsync(InstagramDTO instagram, int page);
-    Task<int> GetInstagramWorksCountAsync(InstagramDTO instagram);
-    public Task<bool> HasActiveWorksAsync(InstagramDTO instagram);
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page);
+    Task<int> GetInstagramWorksCountAsync(InstagramDto instagram);
+    public Task<bool> HasActiveWorksAsync(InstagramDto instagram);
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto);
 }

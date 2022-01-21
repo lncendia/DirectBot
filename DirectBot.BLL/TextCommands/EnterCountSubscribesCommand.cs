@@ -10,7 +10,7 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterCountSubscribesCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
         if (!int.TryParse(message.Text, out var count))
         {
@@ -26,7 +26,7 @@ public class EnterCountSubscribesCommand : ITextCommand
             return;
         }
 
-        var payment = await serviceContainer.PaymentService.CreateBillAsync(user!, count);
+        var payment = await serviceContainer.BillService.CreateBillAsync(user!, count);
         if (payment.Succeeded)
         {
             user!.State = State.Main;
@@ -43,7 +43,7 @@ public class EnterCountSubscribesCommand : ITextCommand
         }
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && user!.State == State.EnterCountToBuy;
     }

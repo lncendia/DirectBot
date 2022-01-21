@@ -3,7 +3,7 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Repositories;
 
-public interface IProxyRepository : IRepository<ProxyDTO>
+public interface IProxyRepository : IRepository<ProxyDto, int>
 {
-    public Task<ProxyDTO?> GetRandomProxyAsync();
+    public Task<ProxyDto?> GetRandomProxyAsync();
 }

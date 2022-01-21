@@ -2,12 +2,12 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DirectBot.BLL.Keyboards.UserKeyboard;
 
-public class MainKeyboard
+public static class MainKeyboard
 {
     public static readonly ReplyKeyboardMarkup MainReplyKeyboard = new(new List<List<KeyboardButton>>
     {
         new() {new KeyboardButton("🌇 Мои аккаунты"), new KeyboardButton("❤ Задачи")},
-        new() {new KeyboardButton("💰 Оплатить подписку"), new KeyboardButton("🗒 Мой профиль")},
+        new() {new KeyboardButton("💰 Подписки"), new KeyboardButton("🗒 Мой профиль")},
         new() {new KeyboardButton("📄 Инструкция"), new KeyboardButton("🤝 Поддержка")}
     })
     {

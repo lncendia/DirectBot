@@ -1,61 +1,68 @@
+using AutoMapper;
+using AutoMapper.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
 using Microsoft.EntityFrameworkCore;
-using Instagram = DirectBot.DAL.Models.Instagram;
-using Work = DirectBot.DAL.Models.Work;
 
 namespace DirectBot.DAL.Repositories;
 
 public class WorkRepository : IWorkRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
 
-    public WorkRepository(ApplicationDbContext context)
+    public WorkRepository(ApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
-    public Task<List<Work>> GetAllAsync()
+    public Task<List<WorkDto>> GetAllAsync()
     {
-        return _context.Works.ToListAsync();
+        return _context.Works.ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
-    public async Task AddAsync(Work entity)
+    public async Task AddOrUpdateAsync(WorkDto entity)
     {
-        await _context.AddAsync(entity);
+        var u = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        entity.Id = u.Id;
+    }
+
+    public async Task DeleteAsync(WorkDto entity)
+    {
+        await _context.Works.Persist(_mapper).RemoveAsync(entity);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(Work entity)
+    public Task<WorkDto?> GetAsync(int id)
     {
-        _context.Remove(entity);
-        await _context.SaveChangesAsync();
+        return _context.Works.Include(work => work.Instagram.User).ProjectTo<WorkDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(work => work.Id == id);
     }
 
-    public async Task UpdateAsync(Work entity)
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page)
     {
-        await _context.SaveChangesAsync();
+        return _context.Works.Where(work => work.Instagram.UserId == userDto.Id)
+            .Skip((page - 1)).ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
     }
 
-    public Task<Work?> GetAsync(long id)
+    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram)
     {
-        return _context.Works.Include(work => work.Instagram.User).FirstOrDefaultAsync(work => work.Id == id);
+        return _context.Works.Where(work => work.Instagram.Id == instagram.Id).CountAsync();
     }
 
-    public async Task<List<Work>> GetInstagramWorksAsync(Instagram user, int page)
+    public Task<bool> HasActiveWorksAsync(InstagramDto instagram)
     {
-        return await _context.Works.Where(work => work.Instagram == user)
-            .Skip((page - 1) * 30).Take(30).ToListAsync();
+        return _context.Works.AnyAsync(work => work.Instagram.Id == instagram.Id && !work.IsCompleted);
     }
 
-    public Task<int> GetInstagramWorksCountAsync(Instagram instagram)
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto)
     {
-        return _context.Works.Where(work => work.Instagram == instagram).CountAsync();
-    }
-
-    public Task<bool> HasActiveWorksAsync(Instagram instagram)
-    {
-        return _context.Works.AnyAsync(work => work.Instagram == instagram && !work.IsCompleted);
+        return _context.Works
+            .Where(work => work.Instagram.UserId == userDto.Id && !work.IsCompleted && string.IsNullOrEmpty(work.JobId))
+            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 }

@@ -10,7 +10,7 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterInstagramDataCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
         var data = message.Text!.Split(':');
         if (data.Length != 2)
@@ -21,7 +21,7 @@ public class EnterInstagramDataCommand : ITextCommand
             return;
         }
 
-        var instagram = new InstagramDTO
+        var instagram = new InstagramDto
         {
             Username = data[0],
             Password = data[1],
@@ -42,7 +42,7 @@ public class EnterInstagramDataCommand : ITextCommand
             replyMarkup: MainKeyboard.Main);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && user!.State == State.EnterInstagramData;
     }

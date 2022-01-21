@@ -1,6 +1,6 @@
 ﻿namespace DirectBot.Core.Models;
 
-public class ProxyDTO
+public class ProxyDto
 {
     public int Id { get; set; }
     public string Host { get; set; } = null!;

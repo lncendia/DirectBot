@@ -14,29 +14,21 @@ public class SubscribeService : ISubscribeService
         _subscribeRepository = subscribeRepository;
     }
 
-    public async Task<IResult<List<SubscribeDTO>>> GetUserSubscribesAsync(UserDTO user, int page)
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page)
     {
-        try
-        {
-            var result = await _subscribeRepository.GetUserSubscribesAsync(user, page);
-            return Result<List<SubscribeDTO>>.Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return Result<List<SubscribeDTO>>.Fail(ex.Message);
-        }
+        return _subscribeRepository.GetUserSubscribesAsync(user, page);
     }
 
-    public Task<int> GetUserSubscribesCountAsync(UserDTO user)
+    public Task<int> GetUserSubscribesCountAsync(UserDto user)
     {
         return _subscribeRepository.GetUserSubscribesCountAsync(user);
     }
 
-    public async Task<IOperationResult> AddSubscribeAsync(SubscribeDTO subscribe)
+    public async Task<IOperationResult> AddSubscribeAsync(SubscribeDto subscribe)
     {
         try
         {
-            await _subscribeRepository.AddAsync(subscribe);
+            await _subscribeRepository.AddOrUpdateAsync(subscribe);
             return OperationResult.Ok();
         }
         catch (Exception ex)

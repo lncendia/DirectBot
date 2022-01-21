@@ -10,7 +10,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class StartEnterAccountDataQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
         if (user!.State != State.Main)
@@ -19,12 +19,11 @@ public class StartEnterAccountDataQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsCountAsync(user!);
-        var subscribes = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user!);
+        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsCountAsync(user);
+        var subscribes = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user);
         if (instagrams >= subscribes)
         {
-            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                "Увы... Так не работает.");
+            await client.AnswerCallbackQueryAsync(query.Id, "У вас нет доступных подписок.");
             return;
         }
 
@@ -35,7 +34,7 @@ public class StartEnterAccountDataQueryCommand : ICallbackQueryCommand
             replyMarkup: MainKeyboard.Main);
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data == "enterData";
     }

@@ -5,7 +5,7 @@ namespace DirectBot.Core.Services;
 
 public interface ISubscribeService
 {
-    public Task<IResult<List<SubscribeDTO>>> GetUserSubscribesAsync(UserDTO user, int page);
-    public Task<int> GetUserSubscribesCountAsync(UserDTO user);
-    public Task<IOperationResult> AddSubscribeAsync(SubscribeDTO subscribe);
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page);
+    public Task<int> GetUserSubscribesCountAsync(UserDto user);
+    public Task<IOperationResult> AddSubscribeAsync(SubscribeDto subscribe);
 }

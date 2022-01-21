@@ -1,6 +1,6 @@
 ﻿namespace DirectBot.Core.Models;
 
-public class InstagramDTO
+public class InstagramDto
 {
     public int Id { get; set; }
     public string Username { get; set; } = null!;
@@ -8,7 +8,8 @@ public class InstagramDTO
     public string? StateData { get; set; }
     public string? TwoFactorLoginInfo { get; set; }
     public string? ChallengeLoginInfo { get; set; }
+    public bool IsSelected { get; set; }
     public bool IsActive { get; set; }
-    public UserDTO User { get; set; } = null!;
-    public ProxyDTO? Proxy { get; set; }
+    public UserDto? User { get; set; }
+    public ProxyDto? Proxy { get; set; }
 }

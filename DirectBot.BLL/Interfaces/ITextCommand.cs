@@ -6,7 +6,7 @@ namespace DirectBot.BLL.Interfaces;
 
 public interface ITextCommand
 {
-    public Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer);
+    public Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer);
 
-    public bool Compare(Message message, UserDTO? user);
+    public bool Compare(Message message, UserDto? user);
 }

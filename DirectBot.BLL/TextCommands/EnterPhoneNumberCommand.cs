@@ -11,22 +11,24 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterPhoneNumberCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
-        if (user!.CurrentInstagram == null)
+        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        if (instagram == null)
         {
             await client.SendTextMessageAsync(message.From!.Id,
                 "Ошибка. Попробуйте войти ещё раз.");
-            user.State = State.Main;
+            user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             return;
         }
 
-        var result =
-            await serviceContainer.InstagramLoginService.SubmitPhoneNumberAsync(user!.CurrentInstagram, message.Text!);
+        await client.SendChatActionAsync(user!.Id, ChatAction.Typing);
+        var result = await serviceContainer.InstagramLoginService.SubmitPhoneNumberAsync(instagram, message.Text!);
         if (result.Succeeded)
         {
-            user.State = State.ChallengeRequiredAccept;
+            user!.State = State.ChallengeRequiredAccept;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.From!.Id,
                 "Код отправлен. Введите код из сообщения.", replyMarkup: MainKeyboard.Main);
@@ -38,7 +40,7 @@ public class EnterPhoneNumberCommand : ITextCommand
         }
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && user!.State == State.ChallengeRequiredPhoneCall;
     }

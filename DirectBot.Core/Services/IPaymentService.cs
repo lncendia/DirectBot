@@ -4,8 +4,7 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Services;
 
-public interface IPaymentService
+public interface IPaymentService : IService<PaymentDto, string>
 {
-    public Task<IResult<Payment>> CreateBillAsync(UserDTO user, int countSubscribes);
-    public Task<IOperationResult> CheckPaymentAsync(string id);
+    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page);
 }

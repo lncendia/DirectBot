@@ -16,7 +16,7 @@ public class ProxyService : IProxyService
         _instagramService = instagramService;
     }
 
-    public async Task<IOperationResult> SetProxyAsync(InstagramDTO instagram)
+    public async Task<IOperationResult> SetProxyAsync(InstagramDto instagram)
     {
         var proxy = await _proxyRepository.GetRandomProxyAsync();
         if (proxy == null) return OperationResult.Fail("Proxy not found");
@@ -24,7 +24,7 @@ public class ProxyService : IProxyService
         return await _instagramService.UpdateAsync(instagram);
     }
 
-    public async Task<IOperationResult> DeleteProxyAsync(ProxyDTO proxy)
+    public async Task<IOperationResult> DeleteProxyAsync(ProxyDto proxy)
     {
         try
         {

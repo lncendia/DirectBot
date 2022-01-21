@@ -3,12 +3,13 @@ using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class ExitQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
         if (user!.State != State.Main)
@@ -17,9 +18,9 @@ public class ExitQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var id = long.Parse(query.Data![5..]);
+        var id = int.Parse(query.Data![5..]);
         var instagram = await serviceContainer.InstagramService.GetAsync(id);
-        if (instagram == null || instagram.User != user)
+        if (instagram == null || instagram.User!.Id != user.Id)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "Вы не можете выйти из этого инстаграма.");
@@ -33,6 +34,7 @@ public class ExitQueryCommand : ICallbackQueryCommand
             return;
         }
 
+        await client.SendChatActionAsync(user.Id, ChatAction.Typing);
         if (instagram.IsActive) await serviceContainer.InstagramLoginService.DeactivateAsync(instagram);
         var result = await serviceContainer.InstagramService.DeleteAsync(instagram);
 
@@ -48,7 +50,7 @@ public class ExitQueryCommand : ICallbackQueryCommand
         }
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data!.StartsWith("exit");
     }

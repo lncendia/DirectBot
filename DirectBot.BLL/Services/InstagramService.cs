@@ -14,12 +14,12 @@ public class InstagramService : IInstagramService
         _instagramRepository = instagramRepository;
     }
 
-    public Task<List<InstagramDTO>> GetAllAsync()
+    public Task<List<InstagramDto>> GetAllAsync()
     {
         return _instagramRepository.GetAllAsync();
     }
 
-    public async Task<IOperationResult> DeleteAsync(InstagramDTO entity)
+    public async Task<IOperationResult> DeleteAsync(InstagramDto entity)
     {
         try
         {
@@ -32,17 +32,17 @@ public class InstagramService : IInstagramService
         }
     }
 
-    public Task<InstagramDTO?> GetAsync(long id)
+    public Task<InstagramDto?> GetAsync(int id)
     {
         return _instagramRepository.GetAsync(id);
     }
 
 
-    public async Task<IOperationResult> UpdateAsync(InstagramDTO instagram)
+    public async Task<IOperationResult> UpdateAsync(InstagramDto instagram)
     {
         try
         {
-            await _instagramRepository.UpdateAsync(instagram);
+            await _instagramRepository.AddOrUpdateAsync(instagram);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -51,14 +51,14 @@ public class InstagramService : IInstagramService
         }
     }
 
-    public async Task<IOperationResult> AddAsync(InstagramDTO item)
+    public async Task<IOperationResult> AddAsync(InstagramDto item)
     {
         try
         {
-            var instagrams = await _instagramRepository.GetUserInstagramsAsync(item.User);
+            var instagrams = await _instagramRepository.GetUserInstagramsAsync(item.User!);
             if (instagrams.Any(instagram => instagram.Username == item.Username))
                 return OperationResult.Fail("Инстаграм с таким именем уже существуют");
-            await _instagramRepository.AddAsync(item);
+            await _instagramRepository.AddOrUpdateAsync(item);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -67,13 +67,33 @@ public class InstagramService : IInstagramService
         }
     }
 
-    public Task<List<InstagramDTO>> GetUserInstagramsAsync(UserDTO user)
+    public Task<List<InstagramDto>> GetUserInstagramsAsync(UserDto user)
     {
         return _instagramRepository.GetUserInstagramsAsync(user);
     }
 
-    public Task<int> GetUserInstagramsCountAsync(UserDTO user)
+    public Task<List<InstagramDto>> GetUserActiveInstagramsAsync(UserDto user)
+    {
+        return _instagramRepository.GetUserInstagramsAsync(user, true);
+    }
+
+    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page)
+    {
+        return _instagramRepository.GetUserInstagramsAsync(user, page);
+    }
+
+    public Task<int> GetUserInstagramsCountAsync(UserDto user)
     {
         return _instagramRepository.GetUserInstagramsCountAsync(user);
+    }
+
+    public Task<int> GetUserActiveInstagramsCountAsync(UserDto user)
+    {
+        return _instagramRepository.GetUserInstagramsCountAsync(user, true);
+    }
+
+    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto)
+    {
+        return _instagramRepository.GetUserSelectedInstagramAsync(userDto);
     }
 }

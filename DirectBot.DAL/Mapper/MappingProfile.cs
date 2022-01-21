@@ -8,19 +8,41 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<UserDTO, User>();
-        CreateMap<User, UserDTO>();
+        CreateMap<UserDto, User>().ReverseMap();
 
-        CreateMap<InstagramDTO, Instagram>();
-        CreateMap<Instagram, InstagramDTO>();
 
-        CreateMap<ProxyDTO, Proxy>();
-        CreateMap<Proxy, ProxyDTO>();
+        CreateMap<InstagramDto, Instagram>()
+            .ForMember(x => x.UserId,
+                expression => expression.MapFrom((dto,_) => dto.User?.Id))
+            .ForMember(x => x.User, expression => expression.Ignore())
+            .ForMember(x => x.Proxy,
+                expression => expression.MapFrom((dto, _) => dto.Proxy?.Id))
+            .ForMember(x => x.Proxy, expression => expression.Ignore());
 
-        CreateMap<SubscribeDTO, Subscribe>();
-        CreateMap<Subscribe, SubscribeDTO>();
+        CreateMap<Instagram, InstagramDto>();
 
-        CreateMap<WorkDTO, Work>();
-        CreateMap<Work, WorkDTO>();
+
+        CreateMap<ProxyDto, Proxy>().ReverseMap();
+
+
+        CreateMap<SubscribeDto, Subscribe>()
+            .ForMember(x => x.UserId,
+                expression => expression.MapFrom((dto,_) => dto.User?.Id))
+            .ForMember(x => x.User, expression => expression.Ignore());
+        CreateMap<Subscribe, SubscribeDto>();
+
+
+        CreateMap<WorkDto, Work>()
+            .ForMember(x => x.InstagramId,
+                expression => expression.MapFrom((dto,_) => dto.Instagram?.Id))
+            .ForMember(x => x.Instagram, expression => expression.Ignore());
+        CreateMap<Work, WorkDto>();
+
+
+        CreateMap<PaymentDto, Payment>()
+            .ForMember(x => x.UserId,
+                expression => expression.MapFrom((dto,_) => dto.User?.Id))
+            .ForMember(x => x.User, expression => expression.Ignore());
+        CreateMap<Payment, PaymentDto>();
     }
 }

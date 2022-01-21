@@ -1,10 +1,9 @@
 namespace DirectBot.Core.Interfaces;
 
-public interface IRepository<T>
+public interface IRepository<T, in TK>
 {
     public Task<List<T>> GetAllAsync();
-    public Task AddAsync(T entity);
+    public Task AddOrUpdateAsync(T entity);
     public Task DeleteAsync(T entity);
-    public Task UpdateAsync(T entity);
-    public Task<T?> GetAsync(long id);
+    public Task<T?> GetAsync(TK id);
 }

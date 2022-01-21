@@ -1,57 +1,59 @@
+using AutoMapper;
+using AutoMapper.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
 using Microsoft.EntityFrameworkCore;
-using Subscribe = DirectBot.DAL.Models.Subscribe;
-using User = DirectBot.DAL.Models.User;
 
 namespace DirectBot.DAL.Repositories;
 
 public class SubscribeRepository : ISubscribeRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
 
-    public SubscribeRepository(ApplicationDbContext context)
+    public SubscribeRepository(ApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
-    public Task<List<Subscribe>> GetAllAsync()
+    public Task<List<SubscribeDto>> GetAllAsync()
     {
-        return _context.Subscribes.ToListAsync();
+        return _context.Subscribes.ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
-    public async Task AddAsync(Subscribe entity)
+    public async Task AddOrUpdateAsync(SubscribeDto entity)
     {
-        await _context.AddAsync(entity);
+        var u = await _context.Subscribes.Persist(_mapper).InsertOrUpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        entity.Id = u.Id;
+    }
+
+    public async Task DeleteAsync(SubscribeDto entity)
+    {
+        await _context.Subscribes.Persist(_mapper).RemoveAsync(entity);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(Subscribe entity)
+    public Task<SubscribeDto?> GetAsync(int id)
     {
-        _context.Remove(entity);
-        await _context.SaveChangesAsync();
+        return _context.Subscribes.Include(subscribe => subscribe.User)
+            .ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(subscribe => subscribe.Id == id);
     }
 
-    public async Task UpdateAsync(Subscribe entity)
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page)
     {
-        await _context.SaveChangesAsync();
+        return _context.Subscribes.Where(payment => payment.User.Id == user.Id)
+            .Skip((page - 1) * 5).Take(5)
+            .OrderByDescending(payment => payment.EndSubscribe).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
-    public Task<Subscribe?> GetAsync(long id)
+    public Task<int> GetUserSubscribesCountAsync(UserDto user)
     {
-        return _context.Subscribes.FirstOrDefaultAsync(subscribe => subscribe.Id == id);
-    }
-
-    public async Task<List<Subscribe>> GetUserSubscribesAsync(User user, int page)
-    {
-        return await _context.Subscribes.Where(payment => payment.User == user)
-            .Skip((page - 1) * 30).Take(30)
-            .OrderByDescending(payment => payment.EndSubscribe).ToListAsync();
-    }
-
-    public Task<int> GetUserSubscribesCountAsync(User user)
-    {
-        return _context.Subscribes.Where(payment => payment.User == user).CountAsync();
+        return _context.Subscribes.Where(payment => payment.User.Id == user.Id).CountAsync();
     }
 }

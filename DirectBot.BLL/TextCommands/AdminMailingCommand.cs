@@ -10,25 +10,25 @@ namespace DirectBot.BLL.TextCommands;
 
 public class AdminMailingCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
         if (user!.State is State.Main or State.SubscribesAdmin)
         {
             await client.SendTextMessageAsync(user.Id, "Введите сообщение, которое хотите разослать.",
                 replyMarkup: MainKeyboard.Main);
-            user.State = State.MailingAdmin;
+            user!.State = State.MailingAdmin;
         }
         else
         {
             await client.SendTextMessageAsync(user.Id, "Вы вышли из панели рассылки.",
                 replyMarkup: MainKeyboard.MainReplyKeyboard);
-            user.State = State.Main;
+            user!.State = State.Main;
         }
 
         await serviceContainer.UserService.UpdateAsync(user);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && message.Text == "/mailing" &&
                user!.State is State.Main or State.MailingAdmin && user.IsAdmin;

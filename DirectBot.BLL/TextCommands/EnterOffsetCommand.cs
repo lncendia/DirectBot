@@ -10,11 +10,13 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterOffsetCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
-        if (!user!.CurrentWorks.Any())
+        var works = await serviceContainer.WorkService.GetUserActiveWorksAsync(user!);
+        if (!works.Any())
         {
-            user.State = State.Main;
+            user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id,
                 "У вас нет активных задач. Вы в главном меню.");
@@ -38,19 +40,21 @@ public class EnterOffsetCommand : ITextCommand
             return;
         }
 
-        user.CurrentWorks.ForEach(work =>
+        var tasks = works.Select(work =>
         {
             work.LowerInterval = lower;
             work.UpperInterval = upper;
+            return serviceContainer.WorkService.UpdateAsync(work);
         });
-        user.State = State.SelectTimeMode;
+        await Task.WhenAll(tasks);
+        user!.State = State.SelectTimeMode;
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.SendTextMessageAsync(message.Chat.Id,
             "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && user!.State == State.EnterOffset;
     }

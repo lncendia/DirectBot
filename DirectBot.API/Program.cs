@@ -1,4 +1,7 @@
 using AutoMapper;
+using AutoMapper.EntityFrameworkCore;
+using AutoMapper.EquivalencyExpression;
+using AutoMapper.Extensions.ExpressionMapping;
 using DirectBot.BLL.Services;
 using DirectBot.Core.Configuration;
 using DirectBot.Core.Repositories;
@@ -7,6 +10,7 @@ using DirectBot.DAL.Data;
 using DirectBot.DAL.Mapper;
 using DirectBot.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -21,6 +25,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
         new MySqlServerVersion(new Version(8, 0, 27)),
         optionsBuilder => optionsBuilder.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    options.EnableSensitiveDataLogging();
 });
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IInstagramRepository, InstagramRepository>();
@@ -34,10 +39,12 @@ builder.Services.AddScoped<IInstagramService, InstagramService>();
 builder.Services.AddScoped<IInstagramLoginService, InstagramLoginService>();
 builder.Services.AddScoped<IUpdateHandler<Update>, UpdateHandler>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IBillService, BillService>();
 builder.Services.AddScoped<ISubscribeService, SubscribeService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IWorkService, WorkService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 
 builder.Services.AddOptions<Configuration>().Bind(builder.Configuration.GetSection("BotConfiguration"))
@@ -48,11 +55,13 @@ builder.Services.AddHttpClient("tgwebhook")
     .AddTypedClient<ITelegramBotClient>(httpClient
         => new TelegramBotClient(builder.Configuration["BotConfiguration:Token"], httpClient));
 
-
-var mapperConfig = new MapperConfiguration(mc => { mc.AddProfile(new MappingProfile()); });
-
-var mapper = mapperConfig.CreateMapper();
-builder.Services.AddSingleton(mapper);
+builder.Services.AddAutoMapper((mc, automapper) =>
+{
+    automapper.AddProfile(new MappingProfile());
+    automapper.AddCollectionMappers();
+    automapper.UseEntityFrameworkCoreModel<ApplicationDbContext>(mc);
+    automapper.AddExpressionMapping();
+}, typeof(ApplicationDbContext).Assembly);
 
 
 // builder.Services.AddHangfire((_, configuration) =>

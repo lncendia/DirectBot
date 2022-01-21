@@ -10,7 +10,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class StartLaterQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
         user!.State = State.SetDate;
@@ -20,7 +20,7 @@ public class StartLaterQueryCommand : ICallbackQueryCommand
             replyMarkup: MainKeyboard.Main);
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data == "startLater" && user!.State == State.SelectTimeMode;
     }

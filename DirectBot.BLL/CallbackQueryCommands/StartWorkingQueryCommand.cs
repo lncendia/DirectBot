@@ -9,7 +9,7 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class StartWorkingQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
         if (user!.State != State.Main)
@@ -18,21 +18,21 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        if (await serviceContainer.InstagramService.GetUserInstagramsCountAsync(user) == 0)
+        if (await serviceContainer.InstagramService.GetUserActiveInstagramsCountAsync(user) == 0)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "У вас нет активированных аккаунтов.");
             return;
         }
 
-        user.State = State.SelectAccounts;
+        user!.State = State.SelectAccounts;
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Выберите аккаунты:",
-            replyMarkup: WorkingKeyboard.Select(await serviceContainer.InstagramService.GetUserInstagramsAsync(user)));
+            replyMarkup: WorkingKeyboard.Select(await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user)));
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data == "startWorking";
     }

@@ -14,12 +14,12 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public Task<List<UserDTO>> GetAllAsync()
+    public Task<List<UserDto>> GetAllAsync()
     {
         return _userRepository.GetAllAsync();
     }
 
-    public async Task<IOperationResult> DeleteAsync(UserDTO entity)
+    public async Task<IOperationResult> DeleteAsync(UserDto entity)
     {
         try
         {
@@ -32,16 +32,16 @@ public class UserService : IUserService
         }
     }
 
-    public Task<UserDTO?> GetAsync(long id)
+    public Task<UserDto?> GetAsync(long id)
     {
         return _userRepository.GetAsync(id);
     }
 
-    public async Task<IOperationResult> UpdateAsync(UserDTO entity)
+    public async Task<IOperationResult> UpdateAsync(UserDto entity)
     {
         try
         {
-            await _userRepository.UpdateAsync(entity);
+            await _userRepository.AddOrUpdateAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -50,11 +50,11 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<IOperationResult> AddAsync(UserDTO item)
+    public async Task<IOperationResult> AddAsync(UserDto item)
     {
         try
         {
-            await _userRepository.AddAsync(item);
+            await _userRepository.AddOrUpdateAsync(item);
             return OperationResult.Ok();
         }
         catch (Exception ex)

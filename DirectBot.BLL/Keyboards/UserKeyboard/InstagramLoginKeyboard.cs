@@ -1,3 +1,5 @@
+using DirectBot.Core.Models;
+using DirectBot.DAL.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DirectBot.BLL.Keyboards.UserKeyboard;
@@ -52,27 +54,45 @@ public static class InstagramLoginKeyboard
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public static InlineKeyboardMarkup InstagramMain(long id, bool isActive)
+    public static InlineKeyboardMarkup InstagramMain(int page, InstagramDto instagram)
     {
+        var list = new List<InlineKeyboardButton>
+        {
+            InlineKeyboardButton.WithCallbackData("⬅", $"myInstagrams_{page - 1}"),
+            InlineKeyboardButton.WithCallbackData("🖊", $"edit_{instagram.Id}"),
+            InlineKeyboardButton.WithCallbackData("➡", $"myInstagrams_{page + 1}")
+        };
         List<InlineKeyboardButton> keyboard;
-        if (isActive)
+        if (instagram.IsActive)
             keyboard = new List<InlineKeyboardButton>()
             {
-                InlineKeyboardButton.WithCallbackData("🚪 Выйти", $"exit_{id}"),
-                InlineKeyboardButton.WithCallbackData("♻ Перезайти", $"reLogIn_{id}")
+                InlineKeyboardButton.WithCallbackData("🚪 Выйти", $"exit_{instagram.Id}"),
+                InlineKeyboardButton.WithCallbackData("♻ Перезайти", $"reLogIn_{instagram.Id}")
             };
         else
             keyboard = new List<InlineKeyboardButton>()
             {
-                InlineKeyboardButton.WithCallbackData("✅ Активировать", $"active_{id}"),
-                InlineKeyboardButton.WithCallbackData("🚪 Удалить", $"exit_{id}"),
+                InlineKeyboardButton.WithCallbackData("✅ Активировать", $"active_{instagram.Id}"),
+                InlineKeyboardButton.WithCallbackData("🚪 Удалить", $"exit_{instagram.Id}"),
             };
-        return new InlineKeyboardMarkup(keyboard);
+        return new InlineKeyboardMarkup(new List<IEnumerable<InlineKeyboardButton>>() {list, keyboard});
     }
 
+    public static readonly InlineKeyboardMarkup MyAccounts = new(
+        new List<List<InlineKeyboardButton>>
+        {
+            new() {InlineKeyboardButton.WithCallbackData("🆕 Добавить", "enterData")},
+            new() {InlineKeyboardButton.WithCallbackData("🗒 Мои аккаунты", "myInstagrams_1")}
+        });
 
-    public static InlineKeyboardMarkup Activate(long id)
+
+    public static InlineKeyboardMarkup Activate(int id)
     {
         return new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("✅ Активировать", $"active_{id}"));
+    }
+
+    public static InlineKeyboardMarkup Edit(int id)
+    {
+        return new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("🖊 Редактировать", $"edit_{id}"));
     }
 }

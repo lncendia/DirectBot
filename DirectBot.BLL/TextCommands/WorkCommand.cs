@@ -10,13 +10,13 @@ namespace DirectBot.BLL.TextCommands;
 
 public class WorkCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
         await client.SendTextMessageAsync(message.Chat.Id,
             "Выберите, что вы хотите сделать.", replyMarkup: WorkingKeyboard.Working);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && message.Text == "❤ Задачи" && user!.State == State.Main;
     }

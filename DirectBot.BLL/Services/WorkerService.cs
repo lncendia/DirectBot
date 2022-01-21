@@ -14,17 +14,17 @@ public class WorkerService : IWorkerService
         _workRepository = workRepository;
     }
 
-    public string StartWork(WorkDTO work)
+    public string StartWork(WorkDto work)
     {
         return Hangfire.BackgroundJob.Enqueue(() => Console.WriteLine("started"));
     }
 
-    public string ScheduleWork(WorkDTO work, DateTimeOffset offset)
+    public string ScheduleWork(WorkDto work, DateTimeOffset offset)
     {
         return Hangfire.BackgroundJob.Schedule(() => Console.WriteLine("started"), offset);
     }
 
-    public IOperationResult CancelWorkAsync(WorkDTO work)
+    public IOperationResult CancelWorkAsync(WorkDto work)
     {
         if (string.IsNullOrEmpty(work.JobId)) throw new NullReferenceException("JobId in null");
         var result = Hangfire.BackgroundJob.Delete(work.JobId);

@@ -10,9 +10,9 @@ namespace DirectBot.BLL.TextCommands;
 
 public class StartCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
-        user = new UserDTO {Id = message.From!.Id, State = State.Main};
+        user = new UserDto {Id = message.From!.Id, State = State.Main};
         var result = await serviceContainer.UserService.AddAsync(user);
         if (result.Succeeded)
         {
@@ -30,7 +30,7 @@ public class StartCommand : ITextCommand
         }
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return user is null;
     }

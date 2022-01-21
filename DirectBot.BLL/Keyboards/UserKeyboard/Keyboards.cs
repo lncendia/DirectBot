@@ -12,7 +12,7 @@ public static class Keyboards
     public static readonly InlineKeyboardMarkup EnterData = new(
         InlineKeyboardButton.WithCallbackData("🖊 Ввести данные", "enterData"));
 
-    public static InlineKeyboardMarkup ChangeProxy(InstagramDTO instagram)
+    public static InlineKeyboardMarkup ChangeProxy(InstagramDto instagram)
     {
         return new InlineKeyboardMarkup(
             InlineKeyboardButton.WithCallbackData("♻ Сменить прокси", $"changeProxy_{instagram.Id}"));

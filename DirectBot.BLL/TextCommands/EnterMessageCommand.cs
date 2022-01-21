@@ -10,9 +10,11 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterMessageCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
-        if (!user!.CurrentWorks.Any())
+        var works = await serviceContainer.WorkService.GetUserActiveWorksAsync(user!);
+        if (!works.Any())
         {
             user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
@@ -21,8 +23,13 @@ public class EnterMessageCommand : ITextCommand
             return;
         }
 
-        user.CurrentWorks.ForEach(work => work.Message = message.Text);
-        user.State = State.EnterOffset;
+        var tasks = works.Select(work =>
+        {
+            work.Message = message.Text;
+            return serviceContainer.WorkService.UpdateAsync(work);
+        });
+        await Task.WhenAll(tasks);
+        user!.State = State.EnterOffset;
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.SendTextMessageAsync(message.Chat.Id,
@@ -30,7 +37,7 @@ public class EnterMessageCommand : ITextCommand
             ParseMode.Html, replyMarkup: MainKeyboard.Main);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
         return message.Type == MessageType.Text && user!.State == State.EnterMassage;
     }

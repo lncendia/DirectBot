@@ -17,15 +17,15 @@ public class UpdateHandler : IUpdateHandler<Update>
 
     public UpdateHandler(IUserService userService, Core.Configuration.Configuration configuration,
         ITelegramBotClient botClient, ILogger<UpdateHandler> logger, IWorkerService workerService,
-        ISubscribeService subscribeService, IProxyService proxyService, IPaymentService paymentService,
+        ISubscribeService subscribeService, IProxyService proxyService, IBillService billService,
         IWorkService workService, IInstagramService instagramService,
-        IInstagramLoginService instagramLoginService)
+        IInstagramLoginService instagramLoginService, IPaymentService paymentService)
     {
         _botClient = botClient;
         _logger = logger;
 
         _serviceContainer = new ServiceContainer(userService, workerService, subscribeService, proxyService,
-            paymentService, instagramLoginService, instagramService, workService, configuration);
+            billService, instagramLoginService, instagramService, workService, paymentService, configuration);
     }
 
     private static readonly List<ITextCommand> TextCommands = new()
@@ -35,6 +35,7 @@ public class UpdateHandler : IUpdateHandler<Update>
         new EnterChallengeRequireCodeCommand(),
         new EnterCountSubscribesCommand(),
         new EnterInstagramDataCommand(),
+        new EnterEditInstagramDataCommand(),
         new EnterMessageToMailingCommand(),
         new EnterPhoneNumberCommand(),
         new EnterTwoFactorCommand(),
@@ -67,7 +68,14 @@ public class UpdateHandler : IUpdateHandler<Update>
         new SelectAccountQueryCommand(),
         new StartLaterQueryCommand(),
         new StartNowQueryCommand(),
-        new StartWorkingQueryCommand()
+        new StartWorkingQueryCommand(),
+        new MyWorksQueryCommand(),
+        new MyInstagramsQueryCommand(),
+        new MyPaymentsQueryCommand(),
+        new MySubscribesQueryCommand(),
+        new BuySubscribeQueryCommand(),
+        new RestartWorkQueryCommand(),
+        new EditInstagramQueryCommand()
     };
 
     public async Task HandleAsync(Update update)

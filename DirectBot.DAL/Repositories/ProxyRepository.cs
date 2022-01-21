@@ -1,3 +1,6 @@
+using AutoMapper;
+using AutoMapper.EntityFrameworkCore;
+using AutoMapper.QueryableExtensions;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
@@ -9,41 +12,41 @@ namespace DirectBot.DAL.Repositories;
 public class ProxyRepository : IProxyRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
 
-    public ProxyRepository(ApplicationDbContext context)
+    public ProxyRepository(ApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
-    public Task<List<Proxy>> GetAllAsync()
+    public Task<List<ProxyDto>> GetAllAsync()
     {
-        return _context.Proxies.ToListAsync();
+        return _context.Proxies.ProjectTo<ProxyDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
-    public async Task AddAsync(Proxy entity)
+    public async Task AddOrUpdateAsync(ProxyDto entity)
     {
-        await _context.AddAsync(entity);
+       var u =  await _context.Proxies.Persist(_mapper).InsertOrUpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        entity.Id = u.Id;
+    }
+
+    public async Task DeleteAsync(ProxyDto entity)
+    {
+        await _context.Proxies.Persist(_mapper).RemoveAsync(entity);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(Proxy entity)
+    public Task<ProxyDto?> GetAsync(int id)
     {
-        _context.Remove(entity);
-        await _context.SaveChangesAsync();
+        return _context.Proxies.ProjectTo<ProxyDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(proxy => proxy.Id == id);
     }
 
-    public async Task UpdateAsync(Proxy entity)
+    public Task<ProxyDto?> GetRandomProxyAsync()
     {
-        await _context.SaveChangesAsync();
-    }
-
-    public Task<Proxy?> GetAsync(long id)
-    {
-        return _context.Proxies.FirstOrDefaultAsync(proxy => proxy.Id == id);
-    }
-
-    public Task<Proxy?> GetRandomProxyAsync()
-    {
-        return _context.Proxies.OrderBy(x=>EF.Functions.Random()).FirstOrDefaultAsync();
+        return _context.Proxies.OrderBy(x => EF.Functions.Random()).ProjectTo<ProxyDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
     }
 }

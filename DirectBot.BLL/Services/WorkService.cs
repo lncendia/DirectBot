@@ -14,31 +14,36 @@ public class WorkService : IWorkService
         _workRepository = workRepository;
     }
 
-    public Task<List<WorkDTO>> GetInstagramWorksAsync(InstagramDTO instagram, int page)
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page)
     {
-        return _workRepository.GetInstagramWorksAsync(instagram, page);
+        return _workRepository.GetUserWorksAsync(userDto, page);
     }
 
-    public Task<int> GetInstagramWorksCountAsync(InstagramDTO instagram)
+    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram)
     {
         return _workRepository.GetInstagramWorksCountAsync(instagram);
     }
 
-    public Task<bool> HasActiveWorksAsync(InstagramDTO instagram)
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto)
+    {
+        return _workRepository.GetUserActiveWorksAsync(userDto);
+    }
+
+    public Task<bool> HasActiveWorksAsync(InstagramDto instagram)
     {
         return _workRepository.HasActiveWorksAsync(instagram);
     }
 
-    public Task<WorkDTO?> GetAsync(long id)
+    public Task<WorkDto?> GetAsync(int id)
     {
         return _workRepository.GetAsync(id);
     }
 
-    public async Task<IOperationResult> UpdateAsync(WorkDTO entity)
+    public async Task<IOperationResult> UpdateAsync(WorkDto entity)
     {
         try
         {
-            await _workRepository.UpdateAsync(entity);
+            await _workRepository.AddOrUpdateAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -47,11 +52,11 @@ public class WorkService : IWorkService
         }
     }
 
-    public async Task<IOperationResult> AddAsync(WorkDTO item)
+    public async Task<IOperationResult> AddAsync(WorkDto item)
     {
         try
         {
-            await _workRepository.AddAsync(item);
+            await _workRepository.AddOrUpdateAsync(item);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -60,12 +65,12 @@ public class WorkService : IWorkService
         }
     }
 
-    public Task<List<WorkDTO>> GetAllAsync()
+    public Task<List<WorkDto>> GetAllAsync()
     {
         return _workRepository.GetAllAsync();
     }
 
-    public async Task<IOperationResult> DeleteAsync(WorkDTO work)
+    public async Task<IOperationResult> DeleteAsync(WorkDto work)
     {
         try
         {

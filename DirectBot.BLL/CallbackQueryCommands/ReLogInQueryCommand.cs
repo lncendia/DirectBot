@@ -4,13 +4,14 @@ using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class ReLogInQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
         if (user!.State != State.Main)
@@ -19,9 +20,9 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var id = long.Parse(query.Data![5..]);
+        var id = int.Parse(query.Data![8..]);
         var instagram = await serviceContainer.InstagramService.GetAsync(id);
-        if (instagram == null || instagram.User != user)
+        if (instagram == null || instagram.User!.Id != user.Id)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "Вы не можете выйти из этого инстаграма.");
@@ -40,9 +41,10 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
         instagram.StateData = null;
         instagram.TwoFactorLoginInfo = null;
         instagram.ChallengeLoginInfo = null;
+        instagram.Proxy = null;
         await serviceContainer.InstagramService.UpdateAsync(instagram);
-        
-        
+
+        await client.SendChatActionAsync(user!.Id, ChatAction.Typing);
         var result = await serviceContainer.InstagramLoginService.ActivateAsync(instagram);
         if (!result.Succeeded)
         {
@@ -63,13 +65,13 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
                 break;
             }
             case LoginResult.BadPassword:
-                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Неверный пароль.");
+                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Неверный пароль.", replyMarkup: InstagramLoginKeyboard.Edit(instagram.Id));
                 return;
             case LoginResult.InvalidUser:
-                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Пользователь не найден.");
+                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Пользователь не найден.", replyMarkup: InstagramLoginKeyboard.Edit(instagram.Id));
                 return;
             case LoginResult.InactiveUser:
-                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Пользователь не активен.");
+                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Пользователь не активен.", replyMarkup: InstagramLoginKeyboard.Edit(instagram.Id));
                 return;
             case LoginResult.LimitError:
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
@@ -77,8 +79,10 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
                 return;
             case LoginResult.TwoFactorRequired:
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                    "Необходима двухфакторная аутентификация. Введите код из сообщения.",
+                    "Необходима двухфакторная аутентификация. Введите проверочный код.",
                     replyMarkup: MainKeyboard.Main);
+                instagram.IsSelected = true;
+                await serviceContainer.InstagramService.UpdateAsync(instagram);
                 user.State = State.EnterTwoFactorCode;
                 break;
             case LoginResult.ChallengeRequired:
@@ -93,7 +97,7 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
 
                 if (challenge.Value!.SubmitPhoneRequired)
                 {
-                    user.State = State.ChallengeRequiredPhoneCall;
+                    user!.State = State.ChallengeRequiredPhoneCall;
                     await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                         "Инстаграм просит подтверждение. Введите подключенный к аккаунту номер.",
                         replyMarkup: MainKeyboard.Main);
@@ -116,7 +120,8 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
                 }
 
                 user.State = State.ChallengeRequired;
-                user.CurrentInstagram = instagram;
+                instagram.IsSelected = true;
+                await serviceContainer.InstagramService.UpdateAsync(instagram);
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                     "Инстаграм просит подтверждение. Выбирете, каким образом вы хотите получить код:",
                     replyMarkup: key);
@@ -131,10 +136,9 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
         }
 
         await serviceContainer.UserService.UpdateAsync(user);
-        
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data!.StartsWith("reLogIn");
     }

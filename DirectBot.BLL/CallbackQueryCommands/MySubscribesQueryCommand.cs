@@ -1,27 +1,47 @@
 ﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.Core.Enums;
+using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using User = DirectBot.Core.Models.User;
+using Telegram.Bot.Types.Enums;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
-public class MySubscribesQueryCommand:ICallbackQueryCommand
+public class MySubscribesQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, User? user, CallbackQuery query, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
+        ServiceContainer serviceContainer)
     {
-        string subscribes = $"У вас {user.Subscribes.Count} подписки(ок).\n";
-        int i = 0;
-        foreach (var sub in user.Subscribes.ToList())
+        if (user!.State != State.Main)
         {
-            i++;
-            subscribes += $"Подписка {i}. Истекает {sub.EndSubscribe:D}\n";
+            await client.AnswerCallbackQueryAsync(query.Id, "Вы должны быть в главное меню.");
+            return;
         }
-        await client.EditMessageTextAsync(query.From.Id, query.Message.MessageId, subscribes,
-            replyMarkup: Keyboards.Back("subscribes"));
+
+        var page = int.Parse(query.Data![13..]);
+        if (page < 1)
+        {
+            await client.AnswerCallbackQueryAsync(query.Id, "Вы в конце списка.");
+            return;
+        }
+
+        var payments = await serviceContainer.SubscribeService.GetUserSubscribesAsync(user, page);
+        if (!payments.Any())
+        {
+            await client.AnswerCallbackQueryAsync(query.Id, "Больше нет подписок.");
+            return;
+        }
+
+        string paymentsString = string.Join("\n\n", payments.Select(payment =>
+            $"Подписка №<code>{payment.Id}</code>\nДата окончания: <code>{payment.EndSubscribe.ToString("g")}</code>"));
+
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, paymentsString, ParseMode.Html,
+            replyMarkup: PaymentKeyboard.ActiveSubscribes(page));
     }
 
-    public bool Compare(CallbackQuery query, User user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
-        return query.Data == "subscribes";
+        return query.Data!.StartsWith("mySubscribes");
     }
 }

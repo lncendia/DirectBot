@@ -29,7 +29,6 @@
     <ItemGroup>
       <Compile Remove="TextCommands\EnterSubscribeDataCommand.cs" />
       <Compile Remove="TextCommands\EnterDurationCommand.cs" />
-      <Compile Remove="CallbackQueryCommands\MySubscribesQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\ListOfWorksQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\CancelWorkQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\GoBackQueryCommand.cs" />

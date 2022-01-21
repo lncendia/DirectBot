@@ -1,8 +1,8 @@
 ﻿namespace DirectBot.Core.Models;
 
-public class SubscribeDTO
+public class SubscribeDto
 {
     public int Id { get; set; }
-    public UserDTO User { get; set; } = null!;
+    public UserDto? User { get; set; }
     public DateTime EndSubscribe { get; set; } = DateTime.UtcNow.AddDays(30);
 }

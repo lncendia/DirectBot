@@ -12,7 +12,7 @@ public static class WorkingKeyboard
         new List<List<InlineKeyboardButton>>
         {
             new() {InlineKeyboardButton.WithCallbackData("🏃 Начать задачу", "startWorking")},
-            new() {InlineKeyboardButton.WithCallbackData("⚙ Активные задачи", "stopWorking")}
+            new() {InlineKeyboardButton.WithCallbackData("⚙ Активные задачи", "worksHistory_1")}
         });
 
     public static readonly InlineKeyboardMarkup StartWork = new(
@@ -26,7 +26,7 @@ public static class WorkingKeyboard
             new() {InlineKeyboardButton.WithCallbackData("🛑 Отмена", "mainMenu")}
         });
 
-    public static InlineKeyboardMarkup Select(IEnumerable<InstagramDTO> instagrams)
+    public static InlineKeyboardMarkup Select(IEnumerable<InstagramDto> instagrams)
     {
         var accounts = instagrams.Select(inst => new List<InlineKeyboardButton>
         {
@@ -52,5 +52,19 @@ public static class WorkingKeyboard
             keyboard.Remove(keyboard.FirstOrDefault(list => list!.Any(key => key.CallbackData == "selectAll")));
 
         return new InlineKeyboardMarkup(keyboard!);
+    }
+
+    public static InlineKeyboardMarkup ActiveWorks(int page, WorkDto workDto)
+    {
+        var list = new List<InlineKeyboardButton>
+        {
+            InlineKeyboardButton.WithCallbackData("⬅", $"worksHistory_{page - 1}"),
+            InlineKeyboardButton.WithCallbackData("🔄", $"restartWork_{workDto.Id}"),
+            InlineKeyboardButton.WithCallbackData("➡", $"worksHistory_{page + 1}")
+        };
+
+        if (!workDto.IsCompleted && !string.IsNullOrEmpty(workDto.JobId))
+            list.Insert(2, InlineKeyboardButton.WithCallbackData("⏹", $"stopWork_{workDto.Id}"));
+        return new InlineKeyboardMarkup(list);
     }
 }

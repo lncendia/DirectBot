@@ -6,7 +6,7 @@ namespace DirectBot.BLL.Interfaces;
 
 public interface ICallbackQueryCommand
 {
-    public Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query, ServiceContainer serviceContainer);
+    public Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query, ServiceContainer serviceContainer);
 
-    public bool Compare(CallbackQuery query, UserDTO? user);
+    public bool Compare(CallbackQuery query, UserDto? user);
 }

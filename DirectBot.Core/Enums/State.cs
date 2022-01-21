@@ -8,6 +8,7 @@ public enum State
     ChallengeRequiredPhoneCall,
     EnterCountToBuy,
     EnterInstagramData,
+    EnterEditInstagramData,
     EnterOffset,
     EnterMassage,
     EnterTwoFactorCode,

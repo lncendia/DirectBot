@@ -5,7 +5,7 @@ namespace DirectBot.Core.Services;
 
 public interface IWorkerService
 {
-    public string StartWork(WorkDTO work);
-    public string ScheduleWork(WorkDTO work, DateTimeOffset dateTimeOffset);
-    public IOperationResult CancelWorkAsync(WorkDTO work);
+    public string StartWork(WorkDto work);
+    public string ScheduleWork(WorkDto work, DateTimeOffset dateTimeOffset);
+    public IOperationResult CancelWorkAsync(WorkDto work);
 }

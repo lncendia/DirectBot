@@ -3,9 +3,10 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Services;
 
-public interface IWorkService : IService<WorkDTO>
+public interface IWorkService : IService<WorkDto, int>
 {
-    Task<List<WorkDTO>> GetInstagramWorksAsync(InstagramDTO instagram, int page);
-    Task<int> GetInstagramWorksCountAsync(InstagramDTO instagram);
-    public Task<bool> HasActiveWorksAsync(InstagramDTO instagram);
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page);
+    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram);
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto);
+    public Task<bool> HasActiveWorksAsync(InstagramDto instagram);
 }

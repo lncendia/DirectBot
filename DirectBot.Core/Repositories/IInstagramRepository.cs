@@ -3,8 +3,11 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Repositories;
 
-public interface IInstagramRepository : IRepository<InstagramDTO>
+public interface IInstagramRepository : IRepository<InstagramDto, int>
 {
-    public Task<List<InstagramDTO>> GetUserInstagramsAsync(UserDTO user);
-    public Task<int> GetUserInstagramsCountAsync(UserDTO user);
+    public Task<List<InstagramDto>> GetUserInstagramsAsync(UserDto user, bool onlyActive = false);
+    public Task<int> GetUserInstagramsCountAsync(UserDto user, bool onlyActive = false);
+
+    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page);
+    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto);
 }

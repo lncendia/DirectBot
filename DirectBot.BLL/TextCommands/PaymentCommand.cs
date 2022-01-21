@@ -10,18 +10,16 @@ namespace DirectBot.BLL.TextCommands;
 
 public class PaymentCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
         await client.SendTextMessageAsync(message.Chat.Id,
-            $"Введите количество аккаунтов, которые хотите добавить. Цена одного аккаунта - {serviceContainer.Configuration.Cost} рублей/30 дней.",
-            replyMarkup: MainKeyboard.Main);
-        user!.State = State.EnterCountToBuy;
-        await serviceContainer.UserService.UpdateAsync(user);
+            "Выберите, что вы хотите сделать.",
+            replyMarkup: PaymentKeyboard.Subscribes);
     }
 
-    public bool Compare(Message message, UserDTO? user)
+    public bool Compare(Message message, UserDto? user)
     {
-        return message.Type == MessageType.Text && message.Text == "💰 Оплатить подписку" &&
-               user!.State == State.Main;
+        return message.Type == MessageType.Text && message.Text == "💰 Подписки" && user!.State == State.Main;
     }
 }

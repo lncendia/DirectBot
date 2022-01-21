@@ -7,13 +7,13 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class BillQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var payment = await serviceContainer.PaymentService.CheckPaymentAsync(query.Data![5..]);
+        var payment = await serviceContainer.BillService.CheckPaymentAsync(query.Data![5..]);
         if (payment.Succeeded)
         {
-            var subscribe = new SubscribeDTO
+            var subscribe = new SubscribeDto
             {
                 User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
             };
@@ -35,7 +35,7 @@ public class BillQueryCommand : ICallbackQueryCommand
         await client.AnswerCallbackQueryAsync(query.Id, "Не оплачено.");
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data!.StartsWith("bill");
     }

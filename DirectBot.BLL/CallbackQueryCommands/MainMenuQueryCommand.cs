@@ -8,11 +8,17 @@ namespace DirectBot.BLL.CallbackQueryCommands;
 
 public class MainMenuQueryCommand : ICallbackQueryCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDTO? user, CallbackQuery query,
+    public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        user!.CurrentInstagram = null;
-        foreach (var userCurrentWork in user.CurrentWorks.ToList()) //TODO: Remove ToList() if use DTOs, cause EF Remove entity after DeleteAsync
+        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        if (instagram != null)
+        {
+            instagram.IsSelected = false;
+            await serviceContainer.InstagramService.UpdateAsync(instagram);
+        }
+
+        foreach (var userCurrentWork in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
         {
             var result = await serviceContainer.WorkService.DeleteAsync(userCurrentWork);
             if (result.Succeeded) continue;
@@ -21,13 +27,13 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user.State = State.Main;
+        user!.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Вы в главном меню.");
     }
 
-    public bool Compare(CallbackQuery query, UserDTO? user)
+    public bool Compare(CallbackQuery query, UserDto? user)
     {
         return query.Data == "mainMenu";
     }
