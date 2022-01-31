@@ -24,13 +24,13 @@ public class BackgroundJobService : IBackgroundJobService
         _messageParser = messageParser;
     }
 
-    [AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunAsync(int workId, CancellationToken token)
     {
         var work = await _workService.GetAsync(workId);
         if (work == null) return;
-        work.IsCompleted = true;
         await _workNotifier.NotifyStartAsync(work);
+        work.IsCompleted = true;
         if (!work.Instagram!.IsActive)
         {
             work.Message = "Инстаграм не активен.";
@@ -58,7 +58,7 @@ public class BackgroundJobService : IBackgroundJobService
         }
 
         await ProcessingAsync(work, users.Value!, token);
-        await _workService.UpdateAsync(work);
+        await Task.WhenAll(_workNotifier.NotifyEndAsync(work), _workService.UpdateAsync(work));
     }
 
     private async Task ProcessingAsync(WorkDto work, List<InstaUser> users, CancellationToken token)
@@ -84,6 +84,7 @@ public class BackgroundJobService : IBackgroundJobService
             {
                 countErrors = 0;
                 work.CountSuccess++;
+                await _workService.UpdateAsync(work);
             }
         }
 
@@ -103,6 +104,6 @@ public class BackgroundJobService : IBackgroundJobService
         var work = await _workService.GetAsync(id);
         if (work == null) return;
         work.IsCompleted = true;
-        await Task.WhenAll(_workNotifier.NotifyEndAsync(work), _workService.UpdateAsync(work));
+        await _workService.UpdateAsync(work);
     }
 }

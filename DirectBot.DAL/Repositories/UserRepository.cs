@@ -37,12 +37,6 @@ public class UserRepository : IUserRepository
             .Include(instagram => instagram.Works).LoadAsync();
         await _context.Entry(user).Collection(user1 => user1.Subscribes!).LoadAsync();
         await _context.Entry(user).Collection(user1 => user1.Payments!).LoadAsync();
-        
-        //
-        // _context.RemoveRange(user.Instagrams!.SelectMany(instagram => instagram.Works!));
-        // _context.RemoveRange(user.Instagrams!s);
-        // _context.RemoveRange(user.Subscribes!);
-        //TODO:Check
         _context.Remove(user);
         await _context.SaveChangesAsync();
     }
