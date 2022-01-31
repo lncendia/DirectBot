@@ -1,35 +1,46 @@
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
-using DirectBot.Core.Repositories;
 using DirectBot.Core.Services;
+using Hangfire;
 
 namespace DirectBot.BLL.Services;
 
 public class WorkerService : IWorkerService
 {
-    private readonly IWorkRepository _workRepository;
+    private readonly IWorkService _workService;
+    private readonly IBackgroundJobService _backgroundJobService;
 
-    public WorkerService(IWorkRepository workRepository)
+    public WorkerService(IBackgroundJobService backgroundJobService, IWorkService workService)
     {
-        _workRepository = workRepository;
+        _backgroundJobService = backgroundJobService;
+        _workService = workService;
     }
 
-    public string StartWork(WorkDto work)
+    public Task<IOperationResult> StartWorkAsync(WorkDto work)
     {
-        return Hangfire.BackgroundJob.Enqueue(() => Console.WriteLine("started"));
+        work.JobId = BackgroundJob.Enqueue(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None));
+        BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
+            JobContinuationOptions.OnAnyFinishedState);
+        work.StartTime = DateTime.Now;
+        return _workService.UpdateAsync(work);
     }
 
-    public string ScheduleWork(WorkDto work, DateTimeOffset offset)
+    public Task<IOperationResult> ScheduleWorkAsync(WorkDto work, DateTimeOffset offset)
     {
-        return Hangfire.BackgroundJob.Schedule(() => Console.WriteLine("started"), offset);
+        work.JobId =
+            BackgroundJob.Schedule(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None), offset);
+        BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
+            JobContinuationOptions.OnAnyFinishedState);
+        work.StartTime = offset.DateTime;
+        return _workService.UpdateAsync(work);
     }
 
-    public IOperationResult CancelWorkAsync(WorkDto work)
+    public Task<IOperationResult> CancelWorkAsync(WorkDto work)
     {
         if (string.IsNullOrEmpty(work.JobId)) throw new NullReferenceException("JobId in null");
-        var result = Hangfire.BackgroundJob.Delete(work.JobId);
-        return !result
-            ? OperationResult.Fail("Failed to stop work")
-            : OperationResult.Ok();
+        var result = BackgroundJob.Delete(work.JobId);
+        if (!result) OperationResult.Fail("Failed to stop work");
+        work.IsSucceeded = true;
+        return _workService.UpdateAsync(work);
     }
 }

@@ -31,19 +31,23 @@ public class UpdateHandler : IUpdateHandler<Update>
     private static readonly List<ITextCommand> TextCommands = new()
     {
         new StartCommand(),
+        new BanCommand(),
         new SendKeyboardCommand(),
         new EnterChallengeRequireCodeCommand(),
         new EnterCountSubscribesCommand(),
         new EnterInstagramDataCommand(),
         new EnterEditInstagramDataCommand(),
         new EnterMessageToMailingCommand(),
+       new EnterSubscribeDataCommand(),
         new EnterPhoneNumberCommand(),
         new EnterTwoFactorCommand(),
         new EnterOffsetCommand(),
         new EnterDateCommand(),
         new EnterMessageCommand(),
+        new EnterFileCommand(),
+        new EnterHashtagCommand(),
         new AdminMailingCommand(),
-        new AdminSubscribesCommand(),
+       new AdminSubscribesCommand(),
 
         //Do not depend on the state
         new HelpCommand(),
@@ -69,13 +73,15 @@ public class UpdateHandler : IUpdateHandler<Update>
         new StartLaterQueryCommand(),
         new StartNowQueryCommand(),
         new StartWorkingQueryCommand(),
+        new SelectTypeQueryCommand(),
         new MyWorksQueryCommand(),
         new MyInstagramsQueryCommand(),
         new MyPaymentsQueryCommand(),
         new MySubscribesQueryCommand(),
         new BuySubscribeQueryCommand(),
         new RestartWorkQueryCommand(),
-        new EditInstagramQueryCommand()
+        new EditInstagramQueryCommand(),
+        new StopWorkQueryCommand()
     };
 
     public async Task HandleAsync(Update update)
@@ -103,7 +109,7 @@ public class UpdateHandler : IUpdateHandler<Update>
         }
     }
 
-    public void HandleErrorAsync(Update update, Exception ex)
+    private void HandleErrorAsync(Update update, Exception ex)
     {
         _logger.LogError(ex, "Update id: {Id}", update.Id);
     }

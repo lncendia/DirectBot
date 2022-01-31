@@ -10,17 +10,18 @@ namespace DirectBot.BLL.TextCommands;
 
 public class StartCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
         user = new UserDto {Id = message.From!.Id, State = State.Main};
         var result = await serviceContainer.UserService.AddAsync(user);
         if (result.Succeeded)
         {
             var t1 = client.SendStickerAsync(message.From.Id,
-                new InputOnlineFile("CAACAgIAAxkBAAEDh2ZhwNXpm0Vikt-5J5yPWTbDPeUwvwAC-BIAAkJOWUoAAXOIe2mqiM0jBA"));
-            var t2 = client.SendTextMessageAsync(message.Chat.Id,
-                "Здравствуйте!🙊\nЕсли хотите найти тот самый фильм из ТикТока😱\nПодпишись на каналы внизу ⬇ после нажми 🔍 Проверить\nИ переходи в канал с фильмом😉",
+                new InputOnlineFile("CAACAgIAAxkBAAEDh2ZhwNXpm0Vikt-5J5yPWTbDPeUwvwAC-BIAAkJOWUoAAXOIe2mqiM0jBA"),
                 replyMarkup: MainKeyboard.MainReplyKeyboard);
+            var t2 = client.SendTextMessageAsync(message.Chat.Id,
+                "Привет", replyMarkup: PaymentKeyboard.PaySubscribe);
             await Task.WhenAll(t1, t2);
         }
         else

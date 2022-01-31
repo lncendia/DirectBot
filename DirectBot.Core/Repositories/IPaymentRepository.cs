@@ -6,5 +6,5 @@ namespace DirectBot.Core.Repositories;
 
 public interface IPaymentRepository : IRepository<PaymentDto, string>
 {
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page);
+    Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page);
 }

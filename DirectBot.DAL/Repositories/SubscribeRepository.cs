@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
+using DirectBot.Core.DTO;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
@@ -19,10 +20,8 @@ public class SubscribeRepository : ISubscribeRepository
         _mapper = mapper;
     }
 
-    public Task<List<SubscribeDto>> GetAllAsync()
-    {
-        return _context.Subscribes.ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
+    public Task<List<SubscribeDto>> GetAllAsync() =>
+        _context.Subscribes.ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(SubscribeDto entity)
     {
@@ -37,23 +36,36 @@ public class SubscribeRepository : ISubscribeRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<SubscribeDto?> GetAsync(int id)
-    {
-        return _context.Subscribes.Include(subscribe => subscribe.User)
+    public Task<SubscribeDto?> GetAsync(int id) =>
+        _context.Subscribes.Include(subscribe => subscribe.User)
             .ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(subscribe => subscribe.Id == id);
-    }
 
-    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page)
-    {
-        return _context.Subscribes.Where(payment => payment.User.Id == user.Id)
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page) =>
+        _context.Subscribes.Where(payment => payment.User.Id == user.Id && payment.EndSubscribe > DateTime.UtcNow)
             .Skip((page - 1) * 5).Take(5)
             .OrderByDescending(payment => payment.EndSubscribe).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
+
+    public Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query)
+    {
+        var searchQuery = _context.Subscribes.AsQueryable();
+        if (query.UserId.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.UserId == query.UserId);
+        if (query.EndOfSubscribeLower.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.EndSubscribe >= query.EndOfSubscribeLower);
+        if (query.EndOfSubscribeUpper.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.EndSubscribe <= query.EndOfSubscribeUpper);
+        return searchQuery.Skip((query.Page - 1) * 30).Take(30).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
-    public Task<int> GetUserSubscribesCountAsync(UserDto user)
-    {
-        return _context.Subscribes.Where(payment => payment.User.Id == user.Id).CountAsync();
-    }
+    public Task<int> GetUserSubscribesCountAsync(UserDto user) =>
+        _context.Subscribes.Where(payment => payment.User.Id == user.Id && payment.EndSubscribe > DateTime.UtcNow)
+            .CountAsync();
+
+    public Task<List<SubscribeDto>> GetExpiredSubscribes() =>
+        _context.Subscribes.Include(subscribe => subscribe.User)
+            .Where(subscribe => subscribe.EndSubscribe < DateTime.UtcNow)
+            .ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider).ToListAsync();
 }

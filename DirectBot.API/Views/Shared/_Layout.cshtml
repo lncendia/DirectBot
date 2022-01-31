@@ -1,0 +1,90 @@
+﻿@using DirectBot.Core.Configuration
+@inject Configuration _configuration
+@{
+    string controllerName = Context.Request.RouteValues["controller"]?.ToString() ?? String.Empty;
+}
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - DirectBot</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-grid.min.css"/>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-reboot.min.css"/>
+    <link rel="stylesheet" href="~/css/scrollUp.css"/>
+    <link rel="stylesheet" href="~/css/site.css"/>
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">DirectBot</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a asp-controller="Proxy" asp-action="Index" class="nav-link @(controllerName == "Proxy" ? "active" : "")">Прокси</a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-controller="Subscribe" asp-action="Index" class="nav-link @(controllerName == "Subscribe" ? "active" : "")">Подписки</a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-controller="User" asp-action="Index" class="nav-link @(controllerName == "User" ? "active" : "")">Пользователи</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/@_configuration.Token/hangfire" class="nav-link">Мониторинг задач</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+@* <header class="d-flex justify-content-center py-3"> *@
+@*     <ul class="nav nav-pills text-decoration-none text-uppercase"> *@
+@*         <li class="nav-item"> *@
+@*             <a asp-controller="Proxy" asp-action="Index" class="nav-link">Прокси</a> *@
+@*         </li> *@
+@*         <li class="nav-item"> *@
+@*             <a asp-controller="Subscribe" asp-action="Index" class="nav-link">Подписки</a> *@
+@*         </li> *@
+@*         <li class="nav-item"> *@
+@*             <a asp-controller="User" asp-action="Index" class="nav-link">Пользователи</a> *@
+@*         </li> *@
+@*         <li class="nav-item"> *@
+@*             <a href="/@_configuration.Token/hangfire" class="nav-link">Мониторинг задач</a> *@
+@*         </li> *@
+@*     </ul> *@
+@* </header> *@
+<div class="container pt-5">
+    <main role="main" class="pb-3">
+        @if (ViewData["Alert"] != null)
+        {
+            <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+                @ViewData["Alert"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+    <a id="back-to-top" href="#" class="back-to-top hidden-xs" role="button" data-toggle="tooltip" data-placement="left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16">
+            <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/>
+        </svg>
+    </a>
+</div>
+
+<footer class="border-top footer text-muted">
+    <div class="container">
+        &copy; @DateTime.Now.Year - DirectBot
+    </div>
+</footer>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+<script src="~/js/scrollUp.js"></script>
+<partial name="_ValidationScriptsPartial"/>
+@await RenderSectionAsync("scripts", false)
+</body>
+</html>

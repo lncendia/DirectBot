@@ -9,16 +9,10 @@ public class PaymentService : IPaymentService
 {
     private readonly IPaymentRepository _paymentRepository;
 
-    public PaymentService(IPaymentRepository paymentRepository)
-    {
-        _paymentRepository = paymentRepository;
-    }
+    public PaymentService(IPaymentRepository paymentRepository) => _paymentRepository = paymentRepository;
 
 
-    public Task<PaymentDto?> GetAsync(string id)
-    {
-        return _paymentRepository.GetAsync(id);
-    }
+    public Task<PaymentDto?> GetAsync(string id) => _paymentRepository.GetAsync(id);
 
     public async Task<IOperationResult> UpdateAsync(PaymentDto entity)
     {
@@ -46,15 +40,9 @@ public class PaymentService : IPaymentService
         }
     }
 
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page)
-    {
-        return _paymentRepository.GetUserPaymentsAsync(user, page);
-    }
+    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page) => _paymentRepository.GetUserPaymentsAsync(user, page);
 
-    public Task<List<PaymentDto>> GetAllAsync()
-    {
-        return _paymentRepository.GetAllAsync();
-    }
+    public Task<List<PaymentDto>> GetAllAsync() => _paymentRepository.GetAllAsync();
 
     public async Task<IOperationResult> DeleteAsync(PaymentDto payment)
     {

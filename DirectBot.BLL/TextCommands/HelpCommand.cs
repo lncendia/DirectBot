@@ -9,10 +9,11 @@ namespace DirectBot.BLL.TextCommands;
 
 public class HelpCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
         await client.SendTextMessageAsync(message.Chat.Id,
-            "За поддержкой вы можете обратиться к @Per4at."); //TODO:Config
+            $"За поддержкой вы можете обратиться к {serviceContainer.Configuration.HelpAddress}.");
     }
 
     public bool Compare(Message message, UserDto? user)

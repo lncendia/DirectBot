@@ -1,5 +1,4 @@
-﻿
-using DirectBot.DAL.Models;
+﻿using DirectBot.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using Instagram = DirectBot.DAL.Models.Instagram;
 using Proxy = DirectBot.DAL.Models.Proxy;
@@ -27,6 +26,7 @@ public class ApplicationDbContext : DbContext
     {
         modelBuilder.Entity<User>()
             .HasMany(c => c.Instagrams).WithOne(c => c.User).HasForeignKey(instagram => instagram.UserId);
+        
         modelBuilder.Entity<User>()
             .HasMany(c => c.Payments).WithOne(c => c.User).HasForeignKey(payment => payment.UserId);
 
@@ -37,7 +37,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Instagram>().HasMany(c => c.Works).WithOne(c => c.Instagram)
             .HasForeignKey(work => work.InstagramId).OnDelete(DeleteBehavior.Cascade);
 
-
-        modelBuilder.Entity<Instagram>().HasOne(c => c.Proxy);
+        modelBuilder.Entity<Instagram>().HasOne(c => c.Proxy).WithMany(inst => inst.Instagrams)
+            .HasForeignKey(c => c.ProxyId);
     }
 }

@@ -25,7 +25,7 @@ public class InstagramLoginService : IInstagramLoginService
     }
 
 
-    private async Task SaveData(InstagramDto instagram, IInstaApi instaApi)
+    private async Task SaveDataAsync(InstagramDto instagram, IInstaApi instaApi)
     {
         instagram.StateData = await instaApi.GetStateDataAsStringAsync();
         if (!ReferenceEquals(instaApi.ChallengeLoginInfo, null))
@@ -65,7 +65,7 @@ public class InstagramLoginService : IInstagramLoginService
         var instaApi = builder.SetUser(userSession).Build();
         await instaApi.SendRequestsBeforeLoginAsync();
         var data = await instaApi.LoginAsync();
-        await SaveData(instagram, instaApi);
+        await SaveDataAsync(instagram, instaApi);
         try
         {
             return Result<LoginResult>.Ok((LoginResult) Enum.Parse(typeof(LoginResult), data.Value.ToString()));
@@ -78,17 +78,17 @@ public class InstagramLoginService : IInstagramLoginService
 
     public async Task<IOperationResult> DeactivateAsync(InstagramDto instagram)
     {
-        var result = await (await BuildApi(instagram)).LogoutAsync();
+        var result = await (await BuildApiAsync(instagram)).LogoutAsync();
         if (!result.Succeeded) return OperationResult.Fail(result.Info.Message);
         return result.Value ? OperationResult.Ok() : OperationResult.Fail("Failed to log out of account");
     }
 
     public async Task SendRequestsAfterLoginAsync(InstagramDto instagram)
     {
-        await (await BuildApi(instagram)).SendRequestsAfterLoginAsync();
+        await (await BuildApiAsync(instagram)).SendRequestsAfterLoginAsync();
     }
 
-    private async Task<IInstaApi> BuildApi(InstagramDto instagram)
+    private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
         var requestDelay = RequestDelay.FromSeconds(2, 3);
@@ -128,9 +128,9 @@ public class InstagramLoginService : IInstagramLoginService
     public async Task<Core.Interfaces.IResult<LoginTwoFactorResult>> EnterTwoFactorAsync(InstagramDto instagram,
         string code)
     {
-        var api = await BuildApi(instagram);
+        var api = await BuildApiAsync(instagram);
         var data = await api.TwoFactorLoginAsync(code, 0);
-        await SaveData(instagram, api);
+        await SaveDataAsync(instagram, api);
         try
         {
             return Result<LoginTwoFactorResult>.Ok(
@@ -145,26 +145,26 @@ public class InstagramLoginService : IInstagramLoginService
     public async Task<IOperationResult> SubmitPhoneNumberAsync(InstagramDto instagram,
         string phoneNumber)
     {
-        var result = await (await BuildApi(instagram)).SubmitPhoneNumberForChallengeRequireAsync(phoneNumber);
+        var result = await (await BuildApiAsync(instagram)).SubmitPhoneNumberForChallengeRequireAsync(phoneNumber);
         return !result.Succeeded ? OperationResult.Fail(result.Info.Message) : OperationResult.Ok();
     }
 
     public async Task<IOperationResult> SmsMethodChallengeRequiredAsync(InstagramDto instagram)
     {
-        var result = await (await BuildApi(instagram)).RequestVerifyCodeToSMSForChallengeRequireAsync();
+        var result = await (await BuildApiAsync(instagram)).RequestVerifyCodeToSMSForChallengeRequireAsync();
         return !result.Succeeded ? OperationResult.Fail(result.Info.Message) : OperationResult.Ok();
     }
 
     public async Task<IOperationResult> EmailMethodChallengeRequiredAsync(
         InstagramDto instagram)
     {
-        var result = await (await BuildApi(instagram)).RequestVerifyCodeToEmailForChallengeRequireAsync();
+        var result = await (await BuildApiAsync(instagram)).RequestVerifyCodeToEmailForChallengeRequireAsync();
         return !result.Succeeded ? OperationResult.Fail(result.Info.Message) : OperationResult.Ok();
     }
 
     public async Task<Core.Interfaces.IResult<ChallengeRequireVerifyMethod>> GetChallengeAsync(InstagramDto instagram)
     {
-        var result = await (await BuildApi(instagram)).GetChallengeRequireVerifyMethodAsync();
+        var result = await (await BuildApiAsync(instagram)).GetChallengeRequireVerifyMethodAsync();
         if (!result.Succeeded) return Result<ChallengeRequireVerifyMethod>.Fail(result.Info.Message);
         var challenge = new ChallengeRequireVerifyMethod
         {
@@ -177,9 +177,9 @@ public class InstagramLoginService : IInstagramLoginService
 
     public async Task<Core.Interfaces.IResult<LoginResult>> SubmitChallengeAsync(InstagramDto instagram, string code)
     {
-        var api = await BuildApi(instagram);
+        var api = await BuildApiAsync(instagram);
         var data = await api.VerifyCodeForChallengeRequireAsync(code);
-        await SaveData(instagram, api);
+        await SaveDataAsync(instagram, api);
         try
         {
             return Result<LoginResult>.Ok((LoginResult) Enum.Parse(typeof(LoginResult), data.Value.ToString()));

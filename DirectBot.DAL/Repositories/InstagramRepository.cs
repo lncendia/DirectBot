@@ -20,10 +20,8 @@ public class InstagramRepository : IInstagramRepository
         _mapper = mapper;
     }
 
-    public Task<List<InstagramDto>> GetAllAsync()
-    {
-        return _context.Instagrams.ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
+    public Task<List<InstagramDto>> GetAllAsync() =>
+        _context.Instagrams.ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(InstagramDto entity)
     {
@@ -60,15 +58,11 @@ public class InstagramRepository : IInstagramRepository
         return query.CountAsync(instagram => instagram.User.Id == user.Id);
     }
 
-    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page)
-    {
-        return _context.Instagrams.Where(instagram => instagram.UserId == user.Id)
-            .Skip((page - 1)).ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-    }
+    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page) =>
+        _context.Instagrams.Where(instagram => instagram.UserId == user.Id)
+            .Skip(page - 1).ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
-    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto)
-    {
-        return _context.Instagrams.Where(instagram => instagram.UserId == userDto.Id && instagram.IsSelected)
+    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto) =>
+        _context.Instagrams.Where(instagram => instagram.UserId == userDto.Id && instagram.IsSelected)
             .ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-    }
 }

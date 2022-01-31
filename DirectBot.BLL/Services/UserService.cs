@@ -1,3 +1,4 @@
+using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
@@ -50,22 +51,13 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<IOperationResult> AddAsync(UserDto item)
-    {
-        try
-        {
-            await _userRepository.AddOrUpdateAsync(item);
-            return OperationResult.Ok();
-        }
-        catch (Exception ex)
-        {
-            return OperationResult.Fail(ex.Message);
-        }
-    }
+    public Task<IOperationResult> AddAsync(UserDto item) => UpdateAsync(item);
 
 
     public Task<int> GetCountAsync()
     {
         return _userRepository.GetCountAsync();
     }
+
+    public Task<List<UserDto>> GetUsersAsync(UserSearchQuery query) => _userRepository.GetUsersAsync(query);
 }

@@ -15,12 +15,10 @@ public class AdminSubscribesCommand : ITextCommand
     {
         if (user!.State is State.Main or State.MailingAdmin)
         {
-            await client.SendTextMessageAsync(user.Id, "Добро пожаловать в панель подписок.",
-                replyMarkup: new ReplyKeyboardRemove());
             await client.SendTextMessageAsync(user.Id,
                 "Введите id человека и дату окончания подписки (111111111 11.11.2011).\nДля стандартного времени действия введите \"s\" (111111111 s).",
                 replyMarkup: MainKeyboard.Main);
-            user!.State = State.SubscribesAdmin;
+            user.State = State.SubscribesAdmin;
         }
         else
         {

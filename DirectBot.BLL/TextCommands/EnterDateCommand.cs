@@ -10,13 +10,15 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterDateCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
         if (TimeSpan.TryParse(message.Text, out var timeSpan))
         {
             var timeEnter = DateTimeOffset.Now.Add(timeSpan.Duration());
-            (await serviceContainer.WorkService.GetUserActiveWorksAsync(user!)).ForEach(
-                work => work.JobId = serviceContainer.WorkerService.ScheduleWork(work, timeEnter));
+            foreach (var work in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
+                await serviceContainer.WorkerService.ScheduleWorkAsync(work, timeEnter);
+
             user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(user.Id, "Задачи успешно поставлены в очередь, вы в главном меню.");

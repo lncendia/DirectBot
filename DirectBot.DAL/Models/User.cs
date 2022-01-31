@@ -11,6 +11,7 @@ public class User
 
     public State State { get; set; }
     public bool IsAdmin { get; set; }
+    public bool IsBanned { get; set; }
 
     public List<Subscribe>? Subscribes { get; set; }
     public List<Instagram>? Instagrams { get; set; }

@@ -11,12 +11,8 @@ public class StartNowQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var tasks = (await serviceContainer.WorkService.GetUserActiveWorksAsync(user!)).Select(work =>
-        {
-            work.JobId = serviceContainer.WorkerService.StartWork(work);
-            return serviceContainer.WorkService.UpdateAsync(work);
-        });
-        await Task.WhenAll(tasks);
+        foreach (var work in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
+            await serviceContainer.WorkerService.StartWorkAsync(work);
         user!.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,

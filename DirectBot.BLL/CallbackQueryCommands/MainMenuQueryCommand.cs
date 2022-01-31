@@ -1,4 +1,5 @@
 ﻿using DirectBot.BLL.Interfaces;
+using DirectBot.BLL.Keyboards.UserKeyboard;
 using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
@@ -23,7 +24,7 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
             var result = await serviceContainer.WorkService.DeleteAsync(userCurrentWork);
             if (result.Succeeded) continue;
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                $"Ошибка: {result.ErrorMessage}");
+                $"Ошибка: {result.ErrorMessage}", replyMarkup: MainKeyboard.Main);
             return;
         }
 

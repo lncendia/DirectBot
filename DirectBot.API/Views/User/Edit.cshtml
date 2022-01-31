@@ -1,0 +1,39 @@
+@using DirectBot.Core.Enums
+@model DirectBot.API.ViewModels.User.UserViewModel
+@{
+    ViewData["Title"] = "Изменение пользователя";
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        <h3>Изменение пользователя</h3>
+        <form asp-action="Edit" method="post" class="form-horizontal">
+            <div asp-validation-summary="ModelOnly"></div>
+            <div class="form-group">
+                <input asp-for="Id" type="hidden" class="form-control"/>
+                <div class="row g-3">
+                    <div class="col-7">
+                        <label asp-for="State"></label>
+                        <select asp-for="State" asp-placeholder-for="UserSearchViewModel!.State" asp-items="Html.GetEnumSelectList<State>()" class="form-control auto-submit"></select>
+                        <span asp-validation-for="State"></span>
+                    </div>
+                    <div class="col-6">
+                        <span class="pe-2">
+                            <input type="checkbox" class="form-check-input auto-submit" id="isBanned" asp-for="IsBanned">
+                            <label asp-for="IsBanned" for="isBanned"></label>
+                            <span asp-validation-for="IsBanned" class="text-danger"></span>
+                        </span>
+                        <span class="pe-2">
+                            <input type="checkbox" class="form-check-input auto-submit" id="isAdmin" asp-for="IsAdmin">
+                            <label asp-for="IsAdmin" for="isAdmin"></label>
+                            <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                        </span>
+                    </div>
+                    <div class="col-12">
+                        <input class="btn shadow-none btn-outline-dark" type="submit" value="Изменить">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

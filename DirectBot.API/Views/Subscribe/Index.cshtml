@@ -1,0 +1,106 @@
+﻿@model DirectBot.API.ViewModels.Subscribe.SubscribeListViewModel
+@{
+    ViewData["Title"] = "Подписки";
+}
+
+<div class="d-inline-block pe-2">
+    <a class="btn shadow-none btn-outline-dark" asp-action="Add">Добавить</a>
+</div>
+<div class="d-inline-block pe-2">
+    <a class="btn shadow-none btn-outline-dark" asp-action="TriggerCheck">Запустить проверку</a>
+</div>
+
+<div class="table-responsive pt-2">
+    <table class="table table-sm table-hover table-bordered table-striped table-condensed text-center align-middle">
+        <thead class="align-middle">
+        <tr>
+            <th rowspan="2" scope="col">№</th>
+            <th scope="col">Пользователь</th>
+            <th scope="col">Дата окончания</th>
+            <th scope="col">Действия</th>
+        </tr>
+
+        <tr>
+            <form asp-action="Index" method="get" class="form-horizontal" id="filter">
+                <th scope="col">
+                    <input asp-for="SubscribeSearchViewModel!.UserId" asp-placeholder-for="SubscribeSearchViewModel!.UserId" class="form-control auto-submit"/>
+                </th>
+                <th colspan="2" scope="col">
+                    <div class="d-flex justify-content-evenly flex-wrap text-end">
+                        <div style="width: 200px" class="d-flex justify-content-between align-items-center">
+                            <label asp-for="SubscribeSearchViewModel!.EndOfSubscribeLower"></label>
+                            <input style="width: 175px" asp-for="SubscribeSearchViewModel!.EndOfSubscribeLower" asp-placeholder-for="SubscribeSearchViewModel!.EndOfSubscribeLower" class="form-control auto-submit"/>
+                        </div>
+                        <div style="width: 200px" class="d-flex justify-content-between align-items-center">
+                            <label asp-for="SubscribeSearchViewModel!.EndOfSubscribeUpper"></label>
+                            <input style="width: 175px" asp-for="SubscribeSearchViewModel!.EndOfSubscribeUpper" asp-placeholder-for="SubscribeSearchViewModel!.EndOfSubscribeUpper" class="form-control auto-submit"/>
+                        </div>
+                    </div>
+                </th>
+            </form>
+        </tr>
+
+        </thead>
+        <tbody class="align-middle">
+        @for (var i = 0; i < Model!.Subscribes?.Count; i++)
+        {
+            <tr>
+                <th scope="row">@(i + 1)</th>
+                <td>@Model!.Subscribes![i].UserId</td>
+                <td>@Model.Subscribes[i].EndSubscribe.ToString("g")</td>
+                <td>
+                    <a class="action" asp-action="Delete" asp-route-id="@Model.Subscribes[i].Id">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+
+<nav>
+    <ul class="pagination">
+        @if (Model.SubscribeSearchViewModel!.Page != 1)
+        {
+            if (Model.SubscribeSearchViewModel.Page > 2)
+            {
+                <li class="page-item">
+                    <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="1" form="filter">
+                </li>
+            }
+            <li class="page-item">
+                <input type="submit" class="d-none" id="btnPrevious" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@(Model.SubscribeSearchViewModel.Page - 1)" form="filter">
+                <label for="btnPrevious" class="page-link" style="cursor: pointer">
+                    <span aria-hidden="true">&laquo;</span>
+                </label>
+            </li>
+            <li class="page-item">
+                <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@(Model.SubscribeSearchViewModel.Page - 1)" form="filter">
+            </li>
+        }
+        <li class="page-item active">
+            <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@Model.SubscribeSearchViewModel.Page" form="filter" disabled>
+        </li>
+        @if (Model.SubscribeSearchViewModel.Page * 30 < Model.Subscribes?.Count)
+        {
+            <li class="page-item">
+                <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@(Model.SubscribeSearchViewModel.Page + 1)" form="filter">
+            </li>
+            <li class="page-item">
+                <input type="submit" class="d-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" id="btnNext" value="@(Model.SubscribeSearchViewModel.Page + 1)" form="filter">
+                <label for="btnNext" class="page-link" style="cursor: pointer">
+                    <span aria-hidden="true">&raquo;</span>
+                </label>
+            </li>
+        }
+    </ul>
+</nav>
+
+@section scripts {
+    <script src="~/js/autoSubmit.js"></script>
+}

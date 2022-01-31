@@ -1,4 +1,5 @@
-﻿using DirectBot.Core.Interfaces;
+﻿using DirectBot.Core.DTO;
+using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.Core.Services;
@@ -16,6 +17,8 @@ public class ProxyService : IProxyService
         _instagramService = instagramService;
     }
 
+    public Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query) => _proxyRepository.GetProxiesAsync(query);
+
     public async Task<IOperationResult> SetProxyAsync(InstagramDto instagram)
     {
         var proxy = await _proxyRepository.GetRandomProxyAsync();
@@ -24,11 +27,13 @@ public class ProxyService : IProxyService
         return await _instagramService.UpdateAsync(instagram);
     }
 
-    public async Task<IOperationResult> DeleteProxyAsync(ProxyDto proxy)
+    public Task<List<ProxyDto>> GetAllAsync() => _proxyRepository.GetAllAsync();
+
+    public async Task<IOperationResult> DeleteAsync(ProxyDto entity)
     {
         try
         {
-            await _proxyRepository.DeleteAsync(proxy);
+            await _proxyRepository.DeleteAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -37,20 +42,20 @@ public class ProxyService : IProxyService
         }
     }
 
-    // public Task<IOperationResult> AddProxyAsync(string proxies)
-    // {
-    //     string[] proxyArray = proxies.Split('\n');
-    //     foreach (var proxyString in proxyArray)
-    //     {
-    //         var data = proxyString.Split(":", 5);
-    //         if (data.Length != 5) return false;
-    //         if (!Org.BouncyCastle.Utilities.Net.IPAddress.IsValid(data[0])) return false;
-    //         if (!int.TryParse(data[1], out int port)) return false;
-    //         _db.Add(new Proxy()
-    //             {Host = data[0], Port = port, Login = data[2], Password = data[3], Country = data[4].ToUpper()});
-    //     }
-    //
-    //     _db.SaveChanges();
-    //     return true;
-    // }
+    public Task<ProxyDto?> GetAsync(int id) => _proxyRepository.GetAsync(id);
+
+    public async Task<IOperationResult> UpdateAsync(ProxyDto entity)
+    {
+        try
+        {
+            await _proxyRepository.AddOrUpdateAsync(entity);
+            return OperationResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail(ex.Message);
+        }
+    }
+
+    public Task<IOperationResult> AddAsync(ProxyDto item) => UpdateAsync(item);
 }

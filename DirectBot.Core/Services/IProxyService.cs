@@ -1,11 +1,11 @@
+using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Services;
 
-public interface IProxyService
+public interface IProxyService : IService<ProxyDto, int>
 {
-    public Task<IOperationResult> SetProxyAsync(InstagramDto instagram);
-    public Task<IOperationResult> DeleteProxyAsync(ProxyDto proxy);
-    // Task<IOperationResult> AddProxyAsync(string proxies);
+    Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query);
+    Task<IOperationResult> SetProxyAsync(InstagramDto instagram);
 }

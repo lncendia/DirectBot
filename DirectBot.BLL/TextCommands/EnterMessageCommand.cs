@@ -23,12 +23,13 @@ public class EnterMessageCommand : ITextCommand
             return;
         }
 
-        var tasks = works.Select(work =>
+        foreach (var work in works)
         {
             work.Message = message.Text;
-            return serviceContainer.WorkService.UpdateAsync(work);
-        });
-        await Task.WhenAll(tasks);
+            await serviceContainer.WorkService.UpdateAsync(work);
+        }
+
+
         user!.State = State.EnterOffset;
         await serviceContainer.UserService.UpdateAsync(user);
 

@@ -46,7 +46,7 @@ public static class InstagramLoginKeyboard
 
     public static InlineKeyboardMarkup Exit(long id)
     {
-        var keyboard = new List<InlineKeyboardButton>()
+        var keyboard = new List<InlineKeyboardButton>
         {
             InlineKeyboardButton.WithCallbackData("🚪 Выйти", $"exit_{id}"),
             InlineKeyboardButton.WithCallbackData("♻ Перезайти", $"reLogIn_{id}")
@@ -64,18 +64,18 @@ public static class InstagramLoginKeyboard
         };
         List<InlineKeyboardButton> keyboard;
         if (instagram.IsActive)
-            keyboard = new List<InlineKeyboardButton>()
+            keyboard = new List<InlineKeyboardButton>
             {
                 InlineKeyboardButton.WithCallbackData("🚪 Выйти", $"exit_{instagram.Id}"),
                 InlineKeyboardButton.WithCallbackData("♻ Перезайти", $"reLogIn_{instagram.Id}")
             };
         else
-            keyboard = new List<InlineKeyboardButton>()
+            keyboard = new List<InlineKeyboardButton>
             {
                 InlineKeyboardButton.WithCallbackData("✅ Активировать", $"active_{instagram.Id}"),
                 InlineKeyboardButton.WithCallbackData("🚪 Удалить", $"exit_{instagram.Id}"),
             };
-        return new InlineKeyboardMarkup(new List<IEnumerable<InlineKeyboardButton>>() {list, keyboard});
+        return new InlineKeyboardMarkup(new List<IEnumerable<InlineKeyboardButton>> {list, keyboard});
     }
 
     public static readonly InlineKeyboardMarkup MyAccounts = new(

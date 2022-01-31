@@ -12,7 +12,7 @@ public class InstructionCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
     {
         await client.SendTextMessageAsync(message.Chat.Id,
-            "Всю инструкцию вы можете прочитать в канале @likebotgid."); //TODO:Config
+            $"Всю инструкцию вы можете прочитать в канале {serviceContainer.Configuration.InstructionAddress}.");
     }
 
     public bool Compare(Message message, UserDto? user)

@@ -6,5 +6,5 @@ namespace DirectBot.Core.Services;
 
 public interface IPaymentService : IService<PaymentDto, string>
 {
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page);
+    Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page);
 }

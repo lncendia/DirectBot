@@ -2,7 +2,7 @@ using DirectBot.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
 
-namespace DirectBot.Controllers;
+namespace DirectBot.API.Controllers;
 
 public class BotController : ControllerBase
 {
@@ -17,6 +17,13 @@ public class BotController : ControllerBase
     public async Task<IActionResult> Post([FromBody] Update update)
     {
         await _updateService.HandleAsync(update);
+        return Ok();
+    }
+
+    [HttpGet]
+    public IActionResult Get()
+
+    {
         return Ok();
     }
 }

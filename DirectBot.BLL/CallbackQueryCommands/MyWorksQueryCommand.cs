@@ -33,15 +33,7 @@ public class MyWorksQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        string workString =
-            $"Работа №<code>{work.Id}</code>\nИнстаграм: <code>{work.Instagram!.Username}</code>\nСообщение: <code>{work.Message}</code>\nИнтервал: <code>{work.LowerInterval}:{work.UpperInterval}</code>\nЗавершена: <code>{(work.IsCompleted ? "Да" : "Нет")}</code>\n";
-        if (work.IsCompleted)
-            if (work.IsSucceeded)
-                workString += $"Успешно: <code>Да</code>";
-            else
-                workString += $"Успешно: <code>Нет</code>\nОшибка: <code>{work.ErrorMessage}</code>";
-
-        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, workString, ParseMode.Html,
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, work.ToString(), ParseMode.Html,
             replyMarkup: WorkingKeyboard.ActiveWorks(page, work));
     }
 

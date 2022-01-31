@@ -19,10 +19,8 @@ public class PaymentRepository : IPaymentRepository
         _mapper = mapper;
     }
 
-    public Task<List<PaymentDto>> GetAllAsync()
-    {
-        return _context.Payments.ProjectTo<PaymentDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
+    public Task<List<PaymentDto>> GetAllAsync() =>
+        _context.Payments.ProjectTo<PaymentDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(PaymentDto entity)
     {
@@ -37,15 +35,12 @@ public class PaymentRepository : IPaymentRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<PaymentDto?> GetAsync(string id)
-    {
-        return _context.Payments.Include(payment => payment.User).ProjectTo<PaymentDto>(_mapper.ConfigurationProvider)
+    public Task<PaymentDto?> GetAsync(string id) =>
+        _context.Payments.Include(payment => payment.User).ProjectTo<PaymentDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(payment => payment.Id == id);
-    }
 
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page)
-    {
-        return _context.Payments.Where(payment => payment.User.Id == user.Id)
+    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page) =>
+        _context.Payments.Where(payment => payment.User.Id == user.Id)
+            .OrderByDescending(payment => payment.PaymentDate)
             .Skip((page - 1) * 5).Take(5).ProjectTo<PaymentDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
 }

@@ -24,12 +24,21 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user!.State = State.SelectAccounts;
+        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user);
+
+        if (subscribesCount == 0)
+        {
+            await client.AnswerCallbackQueryAsync(query.Id, "У вас нет подписок.");
+            return;
+        }
+
+        user.State = State.SelectAccounts;
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Выберите аккаунты:",
-            replyMarkup: WorkingKeyboard.Select(await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user)));
+            replyMarkup: WorkingKeyboard.Select(
+                (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user)).Take(subscribesCount)));
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)

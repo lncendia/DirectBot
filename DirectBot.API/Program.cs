@@ -1,29 +1,31 @@
 using AutoMapper;
-using AutoMapper.EntityFrameworkCore;
 using AutoMapper.EquivalencyExpression;
 using AutoMapper.Extensions.ExpressionMapping;
+using DirectBot.API.Mapper;
+using DirectBot.BLL.HangfireAuthorization;
 using DirectBot.BLL.Services;
 using DirectBot.Core.Configuration;
 using DirectBot.Core.Repositories;
 using DirectBot.Core.Services;
 using DirectBot.DAL.Data;
-using DirectBot.DAL.Mapper;
 using DirectBot.DAL.Repositories;
+using Hangfire;
+using Hangfire.MySql;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllersWithViews().AddNewtonsoftJson();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 27)),
+        new MySqlServerVersion(new Version(8, 0, 28)),
         optionsBuilder => optionsBuilder.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
     options.EnableSensitiveDataLogging();
 });
@@ -46,17 +48,26 @@ builder.Services.AddScoped<IWorkService, WorkService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
+builder.Services.AddScoped<IInstagramUsersGetterService, InstagramUsersGetterService>();
+builder.Services.AddScoped<IMailingService, MailingService>();
+builder.Services.AddScoped<IFileDownloader, FileDownloader>();
+builder.Services.AddScoped<IWorkNotifier, WorkNotifier>();
+builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+builder.Services.AddScoped<ISubscribeNotifier, SubscribeNotifier>();
+builder.Services.AddScoped<IMessageParser, MessageParser>();
+builder.Services.AddScoped<IProxyParser, ProxyParser>();
+
 
 builder.Services.AddOptions<Configuration>().Bind(builder.Configuration.GetSection("BotConfiguration"))
     .ValidateDataAnnotations();
 builder.Services.AddScoped(sp => sp.GetService<IOptions<Configuration>>()!.Value);
 
-builder.Services.AddHttpClient("tgwebhook")
-    .AddTypedClient<ITelegramBotClient>(httpClient
-        => new TelegramBotClient(builder.Configuration["BotConfiguration:Token"], httpClient));
+builder.Services.AddHttpClient("tgwebhook").AddTypedClient<ITelegramBotClient>(httpClient
+    => new TelegramBotClient(builder.Configuration["BotConfiguration:Token"], httpClient));
 
 builder.Services.AddAutoMapper((mc, automapper) =>
 {
+    automapper.AddProfile(new DirectBot.DAL.Mapper.MappingProfile());
     automapper.AddProfile(new MappingProfile());
     automapper.AddCollectionMappers();
     automapper.UseEntityFrameworkCoreModel<ApplicationDbContext>(mc);
@@ -64,23 +75,25 @@ builder.Services.AddAutoMapper((mc, automapper) =>
 }, typeof(ApplicationDbContext).Assembly);
 
 
-// builder.Services.AddHangfire((_, configuration) =>
-// {
-//     configuration.UseStorage(new MySqlStorage(builder.Configuration.GetConnectionString("Hangfire"),
-//         new MySqlStorageOptions
-//         {
-//             TransactionIsolationLevel = IsolationLevel.ReadCommitted,
-//             QueuePollInterval = TimeSpan.FromSeconds(15),
-//             JobExpirationCheckInterval = TimeSpan.FromHours(1),
-//             CountersAggregateInterval = TimeSpan.FromMinutes(5),
-//             PrepareSchemaIfNecessary = true,
-//             DashboardJobListLimit = 50000,
-//             TransactionTimeout = TimeSpan.FromMinutes(1)
-//         }));
-//     configuration.UseSerializerSettings(new JsonSerializerSettings
-//         {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
-// });
-// builder.Services.AddHangfireServer();
+builder.Services.AddHangfire((_, configuration) =>
+{
+    configuration.UseStorage(new MySqlStorage(builder.Configuration.GetConnectionString("Hangfire"),
+        new MySqlStorageOptions
+        {
+            QueuePollInterval = TimeSpan.FromSeconds(15),
+            JobExpirationCheckInterval = TimeSpan.FromHours(1),
+            CountersAggregateInterval = TimeSpan.FromMinutes(5),
+            PrepareSchemaIfNecessary = true,
+            DashboardJobListLimit = 50000,
+            TransactionTimeout = TimeSpan.FromMinutes(1)
+        }));
+    configuration.UseSerializerSettings(new JsonSerializerSettings
+        {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
+    RecurringJob.AddOrUpdate("subscribesChecker",
+        () => _.CreateScope().ServiceProvider.GetService<ISubscribeNotifier>()!.NotifyStartAsync(),
+        Cron.Daily);
+});
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -90,13 +103,22 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
+app.UseStaticFiles();
 app.UseRouting();
+app.UseHangfireDashboard($"/{builder.Configuration["BotConfiguration:Token"]}/hangfire",
+    new DashboardOptions
+    {
+        AppPath = $"/{builder.Configuration["BotConfiguration:Token"]}",
+        Authorization = new[] {new NoAuthorizationFilter()}
+    });
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute("tgwebhook",
         builder.Configuration["BotConfiguration:Token"],
         new {controller = "Bot", action = "Post"});
+    endpoints.MapControllerRoute(
+        "default",
+        builder.Configuration["BotConfiguration:Token"] + "/{controller=Proxy}/{action=Index}/{id?}");
     endpoints.MapControllers();
 });
-
 app.Run();

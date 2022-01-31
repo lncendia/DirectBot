@@ -1,0 +1,127 @@
+﻿@using DirectBot.Core.Enums
+@model DirectBot.API.ViewModels.User.UserListViewModel
+@{
+    ViewData["Title"] = "Пользователи";
+}
+<div class="table-responsive pt-2">
+    <table class="table table-sm table-hover table-bordered table-striped table-condensed text-center align-middle">
+        <thead class="align-middle">
+        <tr>
+            <th rowspan="2" scope="col">№</th>
+            <th scope="col">ID</th>
+            <th scope="col">Состояние</th>
+            <th scope="col">Заблокирован</th>
+            <th scope="col">Админ</th>
+            <th rowspan="2" scope="col">Действия</th>
+        </tr>
+
+        <tr>
+            <form asp-action="Index" method="get" class="form-horizontal" id="filter">
+                <th scope="col">
+                    <input asp-for="UserSearchViewModel!.UserId" asp-placeholder-for="UserSearchViewModel!.UserId" class="form-control auto-submit"/>
+                    <span asp-validation-for="UserSearchViewModel!.UserId"></span>
+                </th>
+                <th scope="col">
+                    <select asp-for="UserSearchViewModel!.State" asp-placeholder-for="UserSearchViewModel!.State" asp-items="Html.GetEnumSelectList<State>()" class="form-control auto-submit">
+                        <option selected="selected" value="">Не выбрано</option>
+                    </select>
+                    <span asp-validation-for="UserSearchViewModel!.State"></span>
+                </th>
+                <th scope="col">
+                    <input type="checkbox" class="form-check-input auto-submit" asp-for="UserSearchViewModel!.IsBanned">
+                </th>
+                <th scope="col">
+                    <input type="checkbox" class="form-check-input auto-submit" asp-for="UserSearchViewModel!.IsAdmin">
+                </th>
+            </form>
+        </tr>
+
+        </thead>
+        <tbody class="align-middle">
+        @for (int i = 0; i < Model!.Users?.Count; i++)
+        {
+            <tr>
+                <th scope="row">@(i + 1)</th>
+                <td> @Model.Users[i].Id</td>
+                <td>@Model.Users[i].State</td>
+                <td>
+                    @if (Model.Users[i].IsBanned)
+                    {
+                        <span class="badge bg-danger">Да</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Нет</span>
+                    }
+                </td>
+                <td>
+                    @if (Model.Users[i].IsAdmin)
+                    {
+                        <span class="badge bg-success">Да</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Нет</span>
+                    }
+                </td>
+                <td>
+                    <a class="action" asp-action="Delete" asp-route-id="@Model.Users[i].Id">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </a>
+                    <a class="action" asp-action="Edit" asp-route-id="@Model.Users[i].Id">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
+                            <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001zm-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"/>
+                        </svg>
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+
+<nav>
+    <ul class="pagination">
+        @if (Model.UserSearchViewModel!.Page != 1)
+        {
+            if (Model.UserSearchViewModel.Page > 2)
+            {
+                <li class="page-item">
+                    <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="1" form="filter">
+                </li>
+            }
+            <li class="page-item">
+                <input type="submit" class="d-none" id="btnPrevious" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@(Model.UserSearchViewModel.Page - 1)" form="filter">
+                <label for="btnPrevious" class="page-link" style="cursor: pointer">
+                    <span aria-hidden="true">&laquo;</span>
+                </label>
+            </li>
+            <li class="page-item">
+                <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@(Model.UserSearchViewModel.Page - 1)" form="filter">
+            </li>
+        }
+        <li class="page-item active">
+            <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@Model.UserSearchViewModel.Page" form="filter" disabled>
+        </li>
+        @if (Model.UserSearchViewModel.Page * 30 < Model.Users?.Count)
+        {
+            <li class="page-item">
+                <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@(Model.UserSearchViewModel.Page + 1)" form="filter">
+            </li>
+            <li class="page-item">
+                <input type="submit" class="d-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" id="btnNext" value="@(Model.UserSearchViewModel.Page + 1)" form="filter">
+                <label for="btnNext" class="page-link" style="cursor: pointer">
+                    <span aria-hidden="true">&raquo;</span>
+                </label>
+            </li>
+        }
+    </ul>
+</nav>
+
+@section scripts {
+    <script src="~/js/autoSubmit.js"></script>
+}

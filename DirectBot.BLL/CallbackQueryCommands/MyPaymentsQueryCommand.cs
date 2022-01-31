@@ -34,7 +34,7 @@ public class MyPaymentsQueryCommand : ICallbackQueryCommand
         }
 
         string paymentsString = string.Join("\n\n", payments.Select(payment =>
-            $"Платеж №<code>{payment.Id}</code>\nДата: <code>{payment.PaymentDate.ToString("g")}</code>\nСумма: <code>{payment.Cost}₽</code>"));
+            $"Платеж <code>{payment.Id}</code>\nДата: <code>{payment.PaymentDate.ToString("g")}</code>\nСумма: <code>{payment.Cost.ToString("F1")}₽</code>"));
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, paymentsString, ParseMode.Html,
             replyMarkup: PaymentKeyboard.ActivePayments(page));

@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
+using DirectBot.Core.DTO;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
@@ -19,10 +20,8 @@ public class UserRepository : IUserRepository
         _mapper = mapper;
     }
 
-    public Task<List<UserDto>> GetAllAsync()
-    {
-        return _context.Users.ProjectTo<UserDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
+    public Task<List<UserDto>> GetAllAsync() =>
+        _context.Users.ProjectTo<UserDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(UserDto entity)
     {
@@ -37,9 +36,13 @@ public class UserRepository : IUserRepository
         await _context.Entry(user).Collection(user1 => user1.Instagrams!).Query()
             .Include(instagram => instagram.Works).LoadAsync();
         await _context.Entry(user).Collection(user1 => user1.Subscribes!).LoadAsync();
-        _context.RemoveRange(user.Instagrams!.SelectMany(instagram => instagram.Works!));
-        _context.RemoveRange(user.Instagrams!);
-        _context.RemoveRange(user.Subscribes!);
+        await _context.Entry(user).Collection(user1 => user1.Payments!).LoadAsync();
+        
+        //
+        // _context.RemoveRange(user.Instagrams!.SelectMany(instagram => instagram.Works!));
+        // _context.RemoveRange(user.Instagrams!s);
+        // _context.RemoveRange(user.Subscribes!);
+        //TODO:Check
         _context.Remove(user);
         await _context.SaveChangesAsync();
     }
@@ -52,8 +55,17 @@ public class UserRepository : IUserRepository
         return x;
     }
 
-    public async Task<int> GetCountAsync()
+    public Task<int> GetCountAsync() => _context.Users.CountAsync();
+
+    public Task<List<UserDto>> GetUsersAsync(UserSearchQuery query)
     {
-        return await _context.Users.CountAsync();
+        var searchQuery = _context.Users.AsQueryable()
+            .Where(user => user.IsAdmin == query.IsAdmin && user.IsBanned == query.IsBanned);
+        if (query.UserId.HasValue)
+            searchQuery = searchQuery.Where(user => user.Id == query.UserId);
+        if (query.State.HasValue)
+            searchQuery = searchQuery.Where(user => user.State == query.State);
+        return searchQuery.Skip((query.Page - 1) * 30).Take(30).ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 }

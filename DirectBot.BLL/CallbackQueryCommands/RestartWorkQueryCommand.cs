@@ -32,7 +32,10 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             Instagram = work.Instagram,
             Message = work.Message,
             LowerInterval = work.LowerInterval,
-            UpperInterval = work.UpperInterval
+            UpperInterval = work.UpperInterval,
+            Type = work.Type,
+            Hashtag = work.Hashtag,
+            FileIdentifier = work.FileIdentifier
         };
 
         var result = await serviceContainer.WorkService.AddAsync(newWork);

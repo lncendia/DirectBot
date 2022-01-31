@@ -14,12 +14,17 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
     {
         var id = int.Parse(query.Data![7..]);
         var instagram = await serviceContainer.InstagramService.GetAsync(id);
-        if (instagram == null || instagram.User!.Id != user!.Id || !instagram.IsActive)
+
+        var currentWorks = await serviceContainer.WorkService.GetUserActiveWorksAsync(user!);
+        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user!);
+
+        if (instagram == null || instagram.User!.Id != user!.Id || !instagram.IsActive ||
+            currentWorks.Count >= subscribesCount || currentWorks.Any(dto => dto.Instagram!.Id == instagram.Id))
         {
-            await client.AnswerCallbackQueryAsync(query.Id,
-                "Вы не можете добавить этот инстаграм.");
+            await client.AnswerCallbackQueryAsync(query.Id, "Вы не можете добавить этот инстаграм.");
             return;
         }
+
 
         var work = new WorkDto
         {
@@ -28,13 +33,11 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
         var result = await serviceContainer.WorkService.AddAsync(work);
         if (!result.Succeeded)
         {
-            await client.AnswerCallbackQueryAsync(query.Id,
-                $"Ошибка: {result.ErrorMessage}.");
+            await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");
             return;
         }
 
-        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-            "Выберите аккаунты:",
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Выберите аккаунты:",
             replyMarkup: WorkingKeyboard.NewSelect(query.Message.ReplyMarkup!.InlineKeyboard.ToList()!, query.Data));
     }
 

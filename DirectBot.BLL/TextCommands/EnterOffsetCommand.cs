@@ -40,18 +40,20 @@ public class EnterOffsetCommand : ITextCommand
             return;
         }
 
-        var tasks = works.Select(work =>
+        foreach (var work in works)
         {
             work.LowerInterval = lower;
             work.UpperInterval = upper;
-            return serviceContainer.WorkService.UpdateAsync(work);
-        });
-        await Task.WhenAll(tasks);
-        user!.State = State.SelectTimeMode;
+            await serviceContainer.WorkService.UpdateAsync(work);
+        }
+
+
+        user!.State = State.SelectType;
         await serviceContainer.UserService.UpdateAsync(user);
 
+
         await client.SendTextMessageAsync(message.Chat.Id,
-            "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
+            "Выберите тип:", replyMarkup: WorkingKeyboard.SelectType);
     }
 
     public bool Compare(Message message, UserDto? user)

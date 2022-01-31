@@ -1,3 +1,4 @@
+using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -12,7 +13,7 @@ public static class WorkingKeyboard
         new List<List<InlineKeyboardButton>>
         {
             new() {InlineKeyboardButton.WithCallbackData("🏃 Начать задачу", "startWorking")},
-            new() {InlineKeyboardButton.WithCallbackData("⚙ Активные задачи", "worksHistory_1")}
+            new() {InlineKeyboardButton.WithCallbackData("⚙ Мои задачи", "worksHistory_1")}
         });
 
     public static readonly InlineKeyboardMarkup StartWork = new(
@@ -67,4 +68,17 @@ public static class WorkingKeyboard
             list.Insert(2, InlineKeyboardButton.WithCallbackData("⏹", $"stopWork_{workDto.Id}"));
         return new InlineKeyboardMarkup(list);
     }
+
+    public static readonly InlineKeyboardMarkup SelectType = new(
+        new List<List<InlineKeyboardButton>>
+        {
+            new() {InlineKeyboardButton.WithCallbackData("1️⃣ Подписчики", $"type_{WorkType.Subscribers.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Подписки", $"type_{WorkType.Subscriptions.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("3️⃣ Хештег", $"type_{WorkType.Hashtag.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("4️⃣ Файл", $"type_{WorkType.File.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
+        });
+
+    public static InlineKeyboardMarkup StopWork(int id) =>
+        new(InlineKeyboardButton.WithCallbackData("⏹ Остановить", $"stopWork_{id}"));
 }

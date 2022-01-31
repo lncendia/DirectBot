@@ -17,10 +17,7 @@ public class BillService : IBillService
 {
     private readonly Configuration _configuration;
 
-    public BillService(Configuration configuration)
-    {
-        _configuration = configuration;
-    }
+    public BillService(Configuration configuration) => _configuration = configuration;
 
     public async Task<IResult<Payment>> CreateBillAsync(UserDto user, int countSubscribes)
     {
@@ -55,7 +52,7 @@ public class BillService : IBillService
         }
     }
 
-    public async Task<IOperationResult> CheckPaymentAsync(string id)
+    public async Task<IResult<PaymentDto>> GetPaymentAsync(string id)
     {
         try
         {
@@ -65,15 +62,19 @@ public class BillService : IBillService
             request.AddHeader("Authorization", $"Bearer {_configuration.PaymentToken}");
             var response1 = await httpClient.ExecuteAsync(request);
             if (response1.StatusCode != HttpStatusCode.OK)
-                return OperationResult.Fail($"Unexpected response: {response1.StatusCode}");
-            var jObject = JsonConvert.DeserializeObject<BillResponse>(response1.Content!);
-            return jObject?.Status.ValueString != "PAID"
-                ? OperationResult.Fail("The bill has not been paid")
-                : OperationResult.Ok();
+                return Result<PaymentDto>.Fail($"Unexpected response: {response1.StatusCode}");
+            var response = JsonConvert.DeserializeObject<BillResponse>(response1.Content!);
+            if (response?.Status.ValueString != "PAID") return Result<PaymentDto>.Fail("The bill has not been paid");
+            var payment = new PaymentDto
+            {
+                PaymentDate = response.Status.ChangedDateTime, Id = response.BillId,
+                Cost = response.Amount.ValueDecimal
+            };
+            return Result<PaymentDto>.Ok(payment);
         }
         catch (Exception ex)
         {
-            return OperationResult.Fail(ex.Message);
+            return Result<PaymentDto>.Fail(ex.Message);
         }
     }
 }

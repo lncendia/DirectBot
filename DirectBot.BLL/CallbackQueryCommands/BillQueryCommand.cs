@@ -10,19 +10,26 @@ public class BillQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var payment = await serviceContainer.BillService.CheckPaymentAsync(query.Data![5..]);
+        var payment = await serviceContainer.BillService.GetPaymentAsync(query.Data![5..]);
         if (payment.Succeeded)
         {
             var subscribe = new SubscribeDto
             {
                 User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
             };
-            var result = await serviceContainer.SubscribeService.AddSubscribeAsync(subscribe);
+            var result = await serviceContainer.SubscribeService.AddAsync(subscribe);
             if (!result.Succeeded)
             {
-                await client.AnswerCallbackQueryAsync(query.Id, "Произошла ошибка при добавлении подписки.");
+                await client.AnswerCallbackQueryAsync(query.Id,
+                    $"Произошла ошибка при добавлении подписки: {result.ErrorMessage}.");
                 return;
             }
+
+            payment.Value!.User = user;
+            result = await serviceContainer.PaymentService.AddAsync(payment.Value);
+            if (!result.Succeeded)
+                await client.AnswerCallbackQueryAsync(query.Id,
+                    $"Произошла ошибка при добавлении платежа: {result.ErrorMessage}.");
 
             var message = query.Message!.Text!;
             message = message.Replace("❌ Статус: Не оплачено", "✔ Статус: Оплачено");

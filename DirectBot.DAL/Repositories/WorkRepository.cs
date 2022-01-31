@@ -19,10 +19,8 @@ public class WorkRepository : IWorkRepository
         _mapper = mapper;
     }
 
-    public Task<List<WorkDto>> GetAllAsync()
-    {
-        return _context.Works.ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
+    public Task<List<WorkDto>> GetAllAsync() =>
+        _context.Works.ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(WorkDto entity)
     {
@@ -37,32 +35,23 @@ public class WorkRepository : IWorkRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<WorkDto?> GetAsync(int id)
-    {
-        return _context.Works.Include(work => work.Instagram.User).ProjectTo<WorkDto>(_mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(work => work.Id == id);
-    }
+    public Task<WorkDto?> GetAsync(int id) =>
+        _context.Works.Include(work => work.Instagram.User).Include(work => work.Instagram.Proxy)
+            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(work => work.Id == id);
 
-    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page)
-    {
-        return _context.Works.Where(work => work.Instagram.UserId == userDto.Id)
-            .Skip((page - 1)).ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-    }
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
+        _context.Works.Where(work => work.Instagram.UserId == userDto.Id).OrderByDescending(work => work.StartTime)
+            .Skip(page - 1)
+            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
-    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram)
-    {
-        return _context.Works.Where(work => work.Instagram.Id == instagram.Id).CountAsync();
-    }
+    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram) =>
+        _context.Works.Where(work => work.Instagram.Id == instagram.Id).CountAsync();
 
-    public Task<bool> HasActiveWorksAsync(InstagramDto instagram)
-    {
-        return _context.Works.AnyAsync(work => work.Instagram.Id == instagram.Id && !work.IsCompleted);
-    }
+    public Task<bool> HasActiveWorksAsync(InstagramDto instagram) =>
+        _context.Works.AnyAsync(work => work.Instagram.Id == instagram.Id && !work.IsCompleted);
 
-    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto)
-    {
-        return _context.Works
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto) =>
+        _context.Works
             .Where(work => work.Instagram.UserId == userDto.Id && !work.IsCompleted && string.IsNullOrEmpty(work.JobId))
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
-    }
 }

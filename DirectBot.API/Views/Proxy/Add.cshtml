@@ -1,0 +1,26 @@
+@model DirectBot.API.ViewModels.Proxy.AddProxyViewModel
+@{
+    ViewData["Title"] = "Загрузка прокси";
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        <h3>Загрузка прокси</h3>
+        <form asp-action="Add" method="post" class="form-horizontal">
+            <div asp-validation-summary="ModelOnly"></div>
+            <div class="form-group">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="ProxyList"></label>
+                        <textarea asp-for="ProxyList" class="form-control"></textarea>
+                        <span asp-validation-for="ProxyList" class="text-danger"></span>
+                        <p class="hint-block">Формат: host:port:login:password</p>
+                    </div>
+                    <div class="col-12">
+                        <input class="btn shadow-none btn-outline-dark" type="submit" value="Добавить">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
