@@ -11,17 +11,34 @@ public class WorkService : IWorkService
 
     public WorkService(IWorkRepository workRepository) => _workRepository = workRepository;
 
-    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) => _workRepository.GetUserWorksAsync(userDto, page);
+    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
+        _workRepository.GetUserWorksAsync(userDto, page);
 
-    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram) => _workRepository.GetInstagramWorksCountAsync(instagram);
+    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram) =>
+        _workRepository.GetInstagramWorksCountAsync(instagram);
 
-    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto) => _workRepository.GetUserActiveWorksAsync(userDto);
+    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto) =>
+        _workRepository.GetUserActiveWorksAsync(userDto);
 
     public Task<bool> HasActiveWorksAsync(InstagramDto instagram) => _workRepository.HasActiveWorksAsync(instagram);
+    public Task<bool> IsCancelled(WorkDto workDto) => _workRepository.IsCancelled(workDto);
 
     public Task<WorkDto?> GetAsync(int id) => _workRepository.GetAsync(id);
 
     public async Task<IOperationResult> UpdateAsync(WorkDto entity)
+    {
+        try
+        {
+            await _workRepository.AddOrUpdateAsync(entity);
+            return OperationResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail(ex.Message);
+        }
+    }
+
+    public async Task<IOperationResult> UpdateWithoutStatusAsync(WorkDto entity)
     {
         try
         {

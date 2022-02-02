@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DirectBot.Core\DirectBot.Core.csproj" />
-      <ProjectReference Include="..\DirectBot.DAL\DirectBot.DAL.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -24,10 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Keyboards\AdminKeyboard" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Compile Remove="TextCommands\EnterDurationCommand.cs" />
       <Compile Remove="CallbackQueryCommands\ListOfWorksQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\CancelWorkQueryCommand.cs" />
@@ -40,10 +35,10 @@
 
     <ItemGroup>
       <Reference Include="InstagramApiSharp, Version=1.7.1.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>C:\Users\egorl\Desktop\InstagramApiSharp.dll</HintPath>
+        <HintPath>..\InstagramApiSharp.dll</HintPath>
       </Reference>
       <Reference Include="InstagramApiSharp.WebApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>..\..\InstagramApiSharp.WebApi\InstagramApiSharp.WebApi\bin\Release\net6.0\publish\InstagramApiSharp.WebApi.dll</HintPath>
+        <HintPath>..\InstagramApiSharp.WebApi.dll</HintPath>
       </Reference>
     </ItemGroup>
 

@@ -12,8 +12,11 @@ public class WorkDto
     public string? JobId { get; set; }
     public string? Hashtag { get; set; }
     public string? FileIdentifier { get; set; }
+    public int CountUsers { get; set; }
     public WorkType Type { get; set; }
     public DateTime StartTime { get; set; }
+
+    public bool IsCanceled { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsSucceeded { get; set; }
     public string? ErrorMessage { get; set; }
@@ -33,17 +36,22 @@ public class WorkDto
         };
 
         string workString =
-            $"Работа №<code>{Id}</code>\n{typeString}\nВремя начала: <code>{StartTime.ToString("g")}</code>\nИнстаграм: <code>{Instagram?.Username}</code>\nСообщение: <code>{Message}</code>\nИнтервал: <code>{LowerInterval}:{UpperInterval}</code>\nЗавершена: <code>{(IsCompleted ? "Да" : "Нет")}</code>\n";
-        if (!IsCompleted) return workString;
-        if (IsSucceeded)
+            $"Работа №<code>{Id}</code>\n{typeString}\nКоличество пользователей: <code>{CountUsers}</code>\nВремя начала: <code>{StartTime.ToString("g")}</code>\nИнстаграм: <code>{Instagram?.Username}</code>\nСообщение: <code>{Message}</code>\nИнтервал: <code>{LowerInterval}:{UpperInterval}</code>\nЗавершена: <code>{(IsCompleted ? "Да" : "Нет")}</code>\n";
+        if (CountSuccess != 0) workString += $"\nКоличество отправленных: <code>{CountSuccess}</code>";
+        if (CountErrors != 0)
+            workString += $"\nНе удалось отправить: <code>{CountErrors}</code>";
+        if (!string.IsNullOrEmpty(ErrorMessage) && (IsSucceeded || !IsCompleted))
+            workString += $"\nПоследняя ошибка: <code>{ErrorMessage}</code>";
+        switch (IsCompleted)
         {
-            workString += $"Успешно: <code>Да</code>\nКоличество отправленных: <code>{CountSuccess}</code>";
-            if (CountErrors == 0) return workString;
-            workString +=
-                $"\nНе удалось отправить: <code>{CountErrors}</code>\nНаиболее частая ошибка: <code>{ErrorMessage}</code>";
+            case true when IsSucceeded:
+                workString += "\nУспешно: <code>Да</code>";
+                break;
+            case true:
+                workString += $"\nУспешно: <code>Нет</code>\nОшибка: <code>{ErrorMessage}</code>";
+                break;
         }
-        else
-            workString += $"Успешно: <code>Нет</code>\nОшибка: <code>{ErrorMessage}</code>";
+        if(IsCanceled) workString += $"\n<b>Отменена</b>";
 
         return workString;
     }

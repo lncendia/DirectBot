@@ -23,7 +23,12 @@ public class EnterFileCommand : ITextCommand
             return;
         }
 
-        //TODO:limitation of file size
+        if (message.Document!.FileSize > 2097152)
+        {
+            await client.SendTextMessageAsync(message.Chat.Id,
+                "Размер файла не должен превышать 2 Мб. Попробуйте ещё раз.", replyMarkup: MainKeyboard.Main);
+            return;
+        }
 
         foreach (var work in works)
         {
@@ -32,12 +37,12 @@ public class EnterFileCommand : ITextCommand
         }
 
 
-        user!.State = State.SelectTimeMode;
+        user!.State = State.EnterCountUsers;
         await serviceContainer.UserService.UpdateAsync(user);
 
 
         await client.SendTextMessageAsync(message.Chat.Id,
-            "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
+            "Введите число получателей. Должно быть не менее 1 и не более 500.", replyMarkup: MainKeyboard.Main);
     }
 
     public bool Compare(Message message, UserDto? user)

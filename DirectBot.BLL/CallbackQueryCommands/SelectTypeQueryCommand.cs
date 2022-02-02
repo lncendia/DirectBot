@@ -23,9 +23,10 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
         {
             case WorkType.Subscriptions:
             case WorkType.Subscribers:
-                user!.State = State.SelectTimeMode;
+                user!.State = State.EnterCountUsers;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                    "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
+                    "Введите число получателей. Должно быть не менее 1 и не более 500.",
+                    replyMarkup: MainKeyboard.Main);
                 break;
             case WorkType.Hashtag:
                 user!.State = State.EnterHashtag;

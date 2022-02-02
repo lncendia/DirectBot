@@ -39,8 +39,18 @@ public class WorkRepository : IWorkRepository
         _context.Works.Include(work => work.Instagram.User).Include(work => work.Instagram.Proxy)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(work => work.Id == id);
 
+    public async Task UpdateWithoutStatusAsync(WorkDto entity)
+    {
+        var u = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(entity);
+        var entry = _context.Entry(u);
+        entry.Property(w => w.IsCompleted).IsModified = false;
+        entry.Property(w => w.IsSucceeded).IsModified = false;
+        entry.Property(w => w.IsCanceled).IsModified = false;
+        await _context.SaveChangesAsync();
+    }
+
     public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
-        _context.Works.Where(work => work.Instagram.UserId == userDto.Id).OrderByDescending(work => work.StartTime)
+        _context.Works.Where(work => work.Instagram.UserId == userDto.Id).OrderByDescending(work => work.Id)
             .Skip(page - 1)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
@@ -54,4 +64,9 @@ public class WorkRepository : IWorkRepository
         _context.Works
             .Where(work => work.Instagram.UserId == userDto.Id && !work.IsCompleted && string.IsNullOrEmpty(work.JobId))
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
+
+    public Task<bool> IsCancelled(WorkDto workDto)
+    {
+        return _context.Works.Select(work => work.IsCanceled).FirstOrDefaultAsync();
+    }
 }

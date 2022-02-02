@@ -40,7 +40,8 @@ public class WorkerService : IWorkerService
         if (string.IsNullOrEmpty(work.JobId)) throw new NullReferenceException("JobId in null");
         var result = BackgroundJob.Delete(work.JobId);
         if (!result) OperationResult.Fail("Failed to stop work");
-        work.IsSucceeded = true;
+        work.IsCompleted = true;
+        work.IsCanceled = true;
         return _workService.UpdateAsync(work);
     }
 }

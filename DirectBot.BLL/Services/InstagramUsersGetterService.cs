@@ -32,15 +32,12 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
     {
         if (workDto.Instagram == null) throw new NullReferenceException();
         var api = await BuildApiAsync(workDto.Instagram);
-        var delay = RequestDelay.FromSeconds(workDto.LowerInterval, workDto.UpperInterval);
-        delay.Enable();
-        api.SetRequestDelay(delay);
         return workDto.Type switch
         {
-            WorkType.Subscriptions => await GetUsersFromFollowingAsync(api, token),
-            WorkType.Subscribers => await GetUsersFromFollowersAsync(api, token),
-            WorkType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, token),
-            WorkType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, token),
+            WorkType.Subscriptions => await GetUsersFromFollowingAsync(api, workDto.CountUsers, token),
+            WorkType.Subscribers => await GetUsersFromFollowersAsync(api, workDto.CountUsers, token),
+            WorkType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, workDto.CountUsers, token),
+            WorkType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, workDto.CountUsers, token),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -48,8 +45,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
-        var builder = InstaApiBuilder.CreateBuilder()
-            .UseLogger(new DebugLogger(LogLevel.All));
+        var builder = InstaApiBuilder.CreateBuilder();//.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
@@ -72,46 +68,52 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         return instaApi;
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowingAsync(IInstaApi api,
+    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowingAsync(IInstaApi api, int count,
         CancellationToken token)
     {
-        var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Following, 50,
-            PaginationParameters.MaxPagesToLoad(10), token);
+        double pageD = count / 50.0;
+        int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
+        var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Following,
+            countPerPage,
+            PaginationParameters.MaxPagesToLoad(pageCount), token);
         return result.Succeeded
-            ? Result<List<InstaUser>>.Ok(result.Value.Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
+            ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
+                .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
                 .ToList())
             : Result<List<InstaUser>>.Fail(result.Info.Message);
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api,
+    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api, int count,
         CancellationToken token)
     {
-        var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Followers, 50,
-            PaginationParameters.MaxPagesToLoad(10), token);
+        double pageD = count / 50.0;
+        int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
+        var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Followers,
+            countPerPage,
+            PaginationParameters.MaxPagesToLoad(pageCount), token);
         return result.Succeeded
-            ? Result<List<InstaUser>>.Ok(result.Value.Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
+            ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
+                .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
                 .ToList())
             : Result<List<InstaUser>>.Fail(result.Info.Message);
     }
 
     private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromHashtagAsync(IInstaApi api, string hashtag,
-        CancellationToken token)
+        int count, CancellationToken token)
     {
+        var pageCount = (int) Math.Ceiling(count / 30.0);
         var resultRecent =
-            await api.HashtagProcessor.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(5));
-        if (!resultRecent.Succeeded) return Result<List<InstaUser>>.Fail(resultRecent.Info.Message);
-        var resultReels =
-            await api.GetReelsHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(5), token);
-        if (!resultReels.Succeeded) return Result<List<InstaUser>>.Fail(resultReels.Info.Message);
-
-        return Result<List<InstaUser>>.Ok(resultRecent.Value.Medias
-            .UnionBy(resultReels.Value.Medias, media => media.User.Pk)
-            .Select(u => new InstaUser {Pk = u.User.Pk, Username = u.User.UserName}).ToList());
+            await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount), token);
+        var x = !resultRecent.Succeeded
+            ? Result<List<InstaUser>>.Fail(resultRecent.Info.Message)
+            : Result<List<InstaUser>>.Ok(resultRecent.Value.Medias.DistinctBy(media => media.User.Pk).Take(count)
+                .Select(u => new InstaUser {Pk = u.User.Pk, Username = u.User.UserName}).ToList());
+        return x;
     }
 
 
     private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFileAsync(IInstaApi api, string fileId,
-        CancellationToken token)
+        int count, CancellationToken token)
     {
         var result = await _fileDownloader.DownloadFileAsync(fileId, token);
         if (!result.Succeeded) return Result<List<InstaUser>>.Fail($"Не удалось получить файл: {result.Value}");
@@ -127,7 +129,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         csv.Context.RegisterClassMap<InstaUserMapper>();
         try
         {
-            var records = csv.GetRecords<InstaUser>().ToList();
+            var records = csv.GetRecords<InstaUser>().Take(count).ToList();
             foreach (var user in records.Where(record => record.Pk == 0).ToList())
             {
                 var instaUser = await api.UserProcessor.GetUserAsync(user.Username);

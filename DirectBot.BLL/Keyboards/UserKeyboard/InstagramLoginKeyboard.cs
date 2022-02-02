@@ -1,5 +1,4 @@
 using DirectBot.Core.Models;
-using DirectBot.DAL.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DirectBot.BLL.Keyboards.UserKeyboard;

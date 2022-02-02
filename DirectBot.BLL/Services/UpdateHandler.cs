@@ -38,7 +38,7 @@ public class UpdateHandler : IUpdateHandler<Update>
         new EnterInstagramDataCommand(),
         new EnterEditInstagramDataCommand(),
         new EnterMessageToMailingCommand(),
-       new EnterSubscribeDataCommand(),
+        new EnterSubscribeDataCommand(),
         new EnterPhoneNumberCommand(),
         new EnterTwoFactorCommand(),
         new EnterOffsetCommand(),
@@ -46,8 +46,9 @@ public class UpdateHandler : IUpdateHandler<Update>
         new EnterMessageCommand(),
         new EnterFileCommand(),
         new EnterHashtagCommand(),
+        new EnterCountCommand(),
         new AdminMailingCommand(),
-       new AdminSubscribesCommand(),
+        new AdminSubscribesCommand(),
 
         //Do not depend on the state
         new HelpCommand(),

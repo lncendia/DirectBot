@@ -3,7 +3,6 @@ using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;
-using DirectBot.DAL.Models;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
 using InstagramApiSharp.Classes;
@@ -17,13 +16,10 @@ public class MailingService : IMailingService
 
     public MailingService(IProxyService proxyService) => _proxyService = proxyService;
 
-    public async Task<IOperationResult> SendMessageAsync(InstagramDto instagram, Range delay, string message,
+    public async Task<IOperationResult> SendMessageAsync(InstagramDto instagram, string message,
         InstaUser instaUser)
     {
         var api = await BuildApiAsync(instagram);
-        var apiDelay = RequestDelay.FromSeconds(delay.Start.Value, delay.End.Value);
-        apiDelay.Enable();
-        api.SetRequestDelay(apiDelay);
         var result = await api.MessagingProcessor.SendDirectTextAsync(instaUser.Pk.ToString(), null, message);
         if (result.Succeeded && result.Info.ResponseType == ResponseType.OK) return OperationResult.Ok();
         return OperationResult.Fail(result.Info.Message);

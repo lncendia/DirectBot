@@ -24,17 +24,17 @@ public class BackgroundJobService : IBackgroundJobService
         _messageParser = messageParser;
     }
 
-    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunAsync(int workId, CancellationToken token)
     {
         var work = await _workService.GetAsync(workId);
         if (work == null) return;
-        await _workNotifier.NotifyStartAsync(work);
-        work.IsCompleted = true;
+        if (work.CountErrors == 0 && work.CountSuccess == 0)
+            await _workNotifier.NotifyStartAsync(work);
         if (!work.Instagram!.IsActive)
         {
             work.Message = "Инстаграм не активен.";
-            await _workService.UpdateAsync(work);
+            await _workService.UpdateWithoutStatusAsync(work);
             return;
         }
 
@@ -45,57 +45,58 @@ public class BackgroundJobService : IBackgroundJobService
         }
         catch (OperationCanceledException)
         {
-            work.IsSucceeded = true;
-            await _workService.UpdateAsync(work);
-            return;
+            if (await _workService.IsCancelled(work)) return;
+            throw;
         }
 
         if (!users.Succeeded)
         {
             work.ErrorMessage = $"Не удалось получить пользователей: {users.ErrorMessage}";
-            await _workService.UpdateAsync(work);
+            await _workService.UpdateWithoutStatusAsync(work);
             return;
         }
 
-        await ProcessingAsync(work, users.Value!, token);
-        await Task.WhenAll(_workNotifier.NotifyEndAsync(work), _workService.UpdateAsync(work));
+        await ProcessingAsync(work, users.Value!.Skip(work.CountSuccess + work.CountErrors), token);
     }
 
-    private async Task ProcessingAsync(WorkDto work, List<InstaUser> users, CancellationToken token)
+    private async Task ProcessingAsync(WorkDto work, IEnumerable<InstaUser> users, CancellationToken token)
     {
         var text = _messageParser.Split(work.Message!);
         var vocabularies = _messageParser.GetVocabularies(work.Message!);
 
 
-        List<string> errors = new List<string>();
-        int countErrors = 0;
+        var countErrors = 0;
+        var rnd = new Random();
         foreach (var user in users)
         {
-            if (token.IsCancellationRequested) break;
-            var result = await _mailingService.SendMessageAsync(work.Instagram!,
-                new Range(work.LowerInterval, work.UpperInterval), _messageParser.Generate(text, vocabularies), user);
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(rnd.Next(work.LowerInterval, work.UpperInterval)), token);
+            }
+            catch (OperationCanceledException)
+            {
+                if (await _workService.IsCancelled(work)) break;
+                throw;
+            }
+
+            var result =
+                await _mailingService.SendMessageAsync(work.Instagram!, _messageParser.Generate(text, vocabularies),
+                    user);
             if (!result.Succeeded)
             {
+                work.CountErrors++;
                 countErrors++;
-                errors.Add(result.ErrorMessage!);
-                if (countErrors == 10) break;
+                work.ErrorMessage = result.ErrorMessage!;
             }
             else
             {
                 countErrors = 0;
                 work.CountSuccess++;
-                await _workService.UpdateAsync(work);
             }
-        }
 
-        if (errors.Any())
-        {
-            work.ErrorMessage = errors.GroupBy(d => d).OrderByDescending(e => e.Count()).First().Key;
-            work.CountErrors = errors.Count;
-            work.IsSucceeded = errors.Count != users.Count;
+            await _workService.UpdateWithoutStatusAsync(work);
+            if (countErrors == 10) break;
         }
-        else
-            work.IsSucceeded = true;
     }
 
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
@@ -104,6 +105,7 @@ public class BackgroundJobService : IBackgroundJobService
         var work = await _workService.GetAsync(id);
         if (work == null) return;
         work.IsCompleted = true;
-        await _workService.UpdateAsync(work);
+        work.IsSucceeded = string.IsNullOrEmpty(work.ErrorMessage) || work.CountSuccess != 0;
+        await Task.WhenAll(_workNotifier.NotifyEndAsync(work), _workService.UpdateAsync(work));
     }
 }

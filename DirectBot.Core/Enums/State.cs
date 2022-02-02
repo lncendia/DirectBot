@@ -14,6 +14,7 @@ public enum State
     EnterFile,
     EnterOffset,
     EnterMassage,
+    EnterCountUsers,
     EnterTwoFactorCode,
     MailingAdmin,
     Main,

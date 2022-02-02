@@ -8,7 +8,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace DirectBot.BLL.TextCommands;
 
-public class EnterHashtagCommand : ITextCommand
+public class EnterCountCommand : ITextCommand
 {
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
@@ -18,28 +18,34 @@ public class EnterHashtagCommand : ITextCommand
         {
             user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
-            await client.SendTextMessageAsync(message.Chat.Id,
-                "У вас нет активных задач. Вы в главном меню.");
+            await client.SendTextMessageAsync(message.Chat.Id, "У вас нет активных задач. Вы в главном меню.");
             return;
         }
 
+        if (!int.TryParse(message.Text!, out var count) || count is < 1 or > 500)
+        {
+            await client.SendTextMessageAsync(message.Chat.Id,
+                "Введены неверные данные. Количество получателей должно быть не менее 1 и не более 500. Попробуйте ещё раз.",
+                replyMarkup: MainKeyboard.Main);
+            return;
+        }
 
         foreach (var work in works)
         {
-            work.Hashtag = message.Text;
+            work.CountUsers = count;
             await serviceContainer.WorkService.UpdateAsync(work);
         }
 
-        user!.State = State.EnterCountUsers;
+        user!.State = State.SelectTimeMode;
         await serviceContainer.UserService.UpdateAsync(user);
 
 
         await client.SendTextMessageAsync(message.Chat.Id,
-            "Введите число получателей. Должно быть не менее 1 и не более 500.", replyMarkup: MainKeyboard.Main);
+            "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
     }
 
     public bool Compare(Message message, UserDto? user)
     {
-        return message.Type == MessageType.Text && user!.State == State.EnterHashtag;
+        return message.Type == MessageType.Text && user!.State == State.EnterCountUsers;
     }
 }

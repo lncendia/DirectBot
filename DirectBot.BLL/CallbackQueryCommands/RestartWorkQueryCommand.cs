@@ -46,11 +46,12 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user.State = State.SelectTimeMode;
+        user.State = State.EnterCountUsers;
         await serviceContainer.UserService.UpdateAsync(user);
 
-        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Выберите действие:",
-            replyMarkup: WorkingKeyboard.StartWork);
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+            "Введите число получателей. Должно быть не менее 1 и не более 500.",
+            replyMarkup: MainKeyboard.Main);
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)
