@@ -32,10 +32,10 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasMany(c => c.Subscribes).WithOne(c => c.User).HasForeignKey(subscribe => subscribe.UserId);
+        modelBuilder.Entity<User>()
+            .HasMany(c => c.Works).WithOne(c => c.User).HasForeignKey(work => work.UserId);
 
-
-        modelBuilder.Entity<Instagram>().HasMany(c => c.Works).WithOne(c => c.Instagram)
-            .HasForeignKey(work => work.InstagramId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Instagram>().HasMany(c => c.Works).WithMany(c => c.Instagrams);
 
         modelBuilder.Entity<Instagram>().HasOne(c => c.Proxy).WithMany(inst => inst.Instagrams)
             .HasForeignKey(c => c.ProxyId);

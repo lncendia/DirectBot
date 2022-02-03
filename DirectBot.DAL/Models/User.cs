@@ -13,7 +13,8 @@ public class User
     public bool IsAdmin { get; set; }
     public bool IsBanned { get; set; }
 
-    public List<Subscribe>? Subscribes { get; set; }
-    public List<Instagram>? Instagrams { get; set; }
-    public List<Payment>? Payments { get; set; }
+    public List<Subscribe> Subscribes { get; set; } = new();
+    public List<Instagram>? Instagrams { get; set; } = new();
+    public List<Payment>? Payments { get; set; } = new();
+    public List<Work>? Works { get; set; } = new();
 }

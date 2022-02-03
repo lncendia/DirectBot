@@ -31,9 +31,10 @@ public class BackgroundJobService : IBackgroundJobService
         if (work == null) return;
         if (work.CountErrors == 0 && work.CountSuccess == 0)
             await _workNotifier.NotifyStartAsync(work);
-        if (!work.Instagram!.IsActive)
+
+        if (!work.Instagrams.All(dto => dto.IsActive))
         {
-            work.Message = "Инстаграм не активен.";
+            work.Message = "Инстаграмы не активны.";
             await _workService.UpdateWithoutStatusAsync(work);
             return;
         }
@@ -49,25 +50,25 @@ public class BackgroundJobService : IBackgroundJobService
             throw;
         }
 
-        if (!users.Succeeded)
+        if (!users.Succeeded || users.Value == null)
         {
             work.ErrorMessage = $"Не удалось получить пользователей: {users.ErrorMessage}";
             await _workService.UpdateWithoutStatusAsync(work);
             return;
         }
 
-        await ProcessingAsync(work, users.Value!.Skip(work.CountSuccess + work.CountErrors), token);
+        await ProcessingAsync(work, users.Value!.Skip(work.CountSuccess + work.CountErrors).ToList(), token);
     }
 
-    private async Task ProcessingAsync(WorkDto work, IEnumerable<InstaUser> users, CancellationToken token)
+    private async Task ProcessingAsync(WorkDto work, IReadOnlyList<InstaUser> users, CancellationToken token)
     {
         var text = _messageParser.Split(work.Message!);
         var vocabularies = _messageParser.GetVocabularies(work.Message!);
 
 
-        var countErrors = 0;
         var rnd = new Random();
-        foreach (var user in users)
+        var instagrams = work.Instagrams.Select(dto => (dto, 0)).ToList();
+        for (var i = 0; i < users.Count; i++)
         {
             try
             {
@@ -79,23 +80,35 @@ public class BackgroundJobService : IBackgroundJobService
                 throw;
             }
 
+            if (instagrams.Count == 0)
+            {
+                work.ErrorMessage = $"Не удалось получить пользователей: {users.ErrorMessage}";
+                await _workService.UpdateWithoutStatusAsync(work);
+            }
+            var inst = instagrams[i % work.Instagrams.Count];
             var result =
-                await _mailingService.SendMessageAsync(work.Instagram!, _messageParser.Generate(text, vocabularies),
-                    user);
-            if (!result.Succeeded)
-            {
-                work.CountErrors++;
-                countErrors++;
-                work.ErrorMessage = result.ErrorMessage!;
-            }
-            else
-            {
-                countErrors = 0;
-                work.CountSuccess++;
-            }
-
+                await _mailingService.SendMessageAsync(inst.dto, _messageParser.Generate(text, vocabularies), users[i]);
+            HandleResult(result, work, inst);
             await _workService.UpdateWithoutStatusAsync(work);
-            if (countErrors == 10) break;
+            if (inst.Item2 == 5)
+            {
+                instagrams.Remove(inst);
+            }
+        }
+    }
+
+    private void HandleResult(IOperationResult result, WorkDto work, (InstagramDto, int) inst)
+    {
+        if (!result.Succeeded)
+        {
+            work.CountErrors++;
+            inst.Item2++;
+            work.ErrorMessage = result.ErrorMessage!;
+        }
+        else
+        {
+            inst.Item2 = 0;
+            work.CountSuccess++;
         }
     }
 

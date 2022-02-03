@@ -7,5 +7,5 @@ public class Proxy
     public int Port { get; set; }
     public string Login { get; set; } = null!;
     public string Password { get; set; } = null!;
-    public List<Instagram>? Instagrams { get; set; }
+    public List<Instagram> Instagrams { get; set; } = new();
 }

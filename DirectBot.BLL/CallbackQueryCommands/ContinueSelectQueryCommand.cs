@@ -12,7 +12,8 @@ public class ContinueSelectQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        if (!(await serviceContainer.WorkService.GetUserActiveWorksAsync(user!)).Any())
+        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        if (work?.Instagrams == null || work.Instagrams.Any())
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Вы не выбрали ни одного аккаунта.");
             return;

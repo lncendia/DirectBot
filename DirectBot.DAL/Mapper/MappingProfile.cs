@@ -33,9 +33,9 @@ public class MappingProfile : Profile
 
 
         CreateMap<WorkDto, Work>()
-            .ForMember(x => x.InstagramId,
-                expression => expression.MapFrom((dto, _) => dto.Instagram?.Id))
-            .ForMember(x => x.Instagram, expression => expression.Ignore());
+            .ForMember(x => x.User,
+                expression => expression.MapFrom((dto, _) => dto.User?.Id))
+            .ForMember(x => x.Instagrams, expression => expression.Ignore());
         CreateMap<Work, WorkDto>();
 
 

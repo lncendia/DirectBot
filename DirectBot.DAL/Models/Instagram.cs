@@ -19,5 +19,5 @@ public class Instagram
     public Proxy? Proxy { get; set; }
     public int? ProxyId { get; set; }
 
-    public List<Work>? Works { get; set; }
+    public List<Work>? Works { get; set; } = new();
 }

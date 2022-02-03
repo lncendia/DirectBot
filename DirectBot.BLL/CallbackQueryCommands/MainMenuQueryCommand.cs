@@ -19,13 +19,16 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
             await serviceContainer.InstagramService.UpdateAsync(instagram);
         }
 
-        foreach (var userCurrentWork in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
+        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        if (work != null)
         {
-            var result = await serviceContainer.WorkService.DeleteAsync(userCurrentWork);
-            if (result.Succeeded) continue;
-            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                $"Ошибка: {result.ErrorMessage}", replyMarkup: MainKeyboard.Main);
-            return;
+            var result = await serviceContainer.WorkService.DeleteAsync(work);
+            if (!result.Succeeded)
+            {
+                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                    $"Ошибка: {result.ErrorMessage}", replyMarkup: MainKeyboard.Main);
+                return;
+            }
         }
 
         user!.State = State.Main;

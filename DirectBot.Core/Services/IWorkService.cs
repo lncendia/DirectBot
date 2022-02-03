@@ -7,8 +7,8 @@ public interface IWorkService : IService<WorkDto, int>
 {
      public Task<IOperationResult> UpdateWithoutStatusAsync(WorkDto entity);
      Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page);
-     Task<int> GetInstagramWorksCountAsync(InstagramDto instagram);
-     Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto);
+     Task<WorkDto?> GetUserSelectedWorkAsync(UserDto userDto);
      Task<bool> HasActiveWorksAsync(InstagramDto instagram);
      Task<bool> IsCancelled(WorkDto workDto);
+     Task<IOperationResult> AddInstagramToWork(WorkDto workDto, InstagramDto instagramDto);
 }

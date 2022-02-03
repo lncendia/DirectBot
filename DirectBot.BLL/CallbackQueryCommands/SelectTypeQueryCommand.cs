@@ -13,11 +13,15 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
         ServiceContainer serviceContainer)
     {
         var type = (WorkType) Enum.Parse(typeof(WorkType), query.Data![5..]);
-        foreach (var dto in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
+        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        if (work == null)
         {
-            dto.Type = type;
-            await serviceContainer.WorkService.AddAsync(dto);
+            await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
+            return;
         }
+
+        work.Type = type;
+        await serviceContainer.WorkService.UpdateAsync(work);
 
         switch (type)
         {

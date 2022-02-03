@@ -13,12 +13,8 @@ public class WorkService : IWorkService
 
     public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
         _workRepository.GetUserWorksAsync(userDto, page);
-
-    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram) =>
-        _workRepository.GetInstagramWorksCountAsync(instagram);
-
-    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto) =>
-        _workRepository.GetUserActiveWorksAsync(userDto);
+    public Task<WorkDto?> GetUserSelectedWorkAsync(UserDto userDto) =>
+        _workRepository.GetUserSelectedWorkAsync(userDto);
 
     public Task<bool> HasActiveWorksAsync(InstagramDto instagram) => _workRepository.HasActiveWorksAsync(instagram);
     public Task<bool> IsCancelled(WorkDto workDto) => _workRepository.IsCancelled(workDto);

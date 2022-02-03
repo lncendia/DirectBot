@@ -36,7 +36,8 @@ public class WorkRepository : IWorkRepository
     }
 
     public Task<WorkDto?> GetAsync(int id) =>
-        _context.Works.Include(work => work.Instagram.User).Include(work => work.Instagram.Proxy)
+        _context.Works.Include(work => work.User).Include(work => work.Instagrams)!
+            .ThenInclude(instagram => instagram.Proxy)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(work => work.Id == id);
 
     public async Task UpdateWithoutStatusAsync(WorkDto entity)
@@ -50,20 +51,18 @@ public class WorkRepository : IWorkRepository
     }
 
     public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
-        _context.Works.Where(work => work.Instagram.UserId == userDto.Id).OrderByDescending(work => work.Id)
-            .Skip(page - 1)
+        _context.Works.Where(work => work.User.Id == userDto.Id).Include(work => work.Instagrams)
+            .OrderByDescending(work => work.Id).Skip(page - 1)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
-    public Task<int> GetInstagramWorksCountAsync(InstagramDto instagram) =>
-        _context.Works.Where(work => work.Instagram.Id == instagram.Id).CountAsync();
-
     public Task<bool> HasActiveWorksAsync(InstagramDto instagram) =>
-        _context.Works.AnyAsync(work => work.Instagram.Id == instagram.Id && !work.IsCompleted);
+        _context.Works.AnyAsync(work =>
+            work.Instagrams!.Any(instagram1 => instagram1.Id == instagram.Id) && !work.IsCompleted);
 
-    public Task<List<WorkDto>> GetUserActiveWorksAsync(UserDto userDto) =>
-        _context.Works
-            .Where(work => work.Instagram.UserId == userDto.Id && !work.IsCompleted && string.IsNullOrEmpty(work.JobId))
-            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
+    public Task<WorkDto?> GetUserSelectedWorkAsync(UserDto userDto) =>
+        _context.Works.Where(work =>
+                work.UserId == userDto.Id && !work.IsCompleted && string.IsNullOrEmpty(work.JobId))
+            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
     public Task<bool> IsCancelled(WorkDto workDto)
     {

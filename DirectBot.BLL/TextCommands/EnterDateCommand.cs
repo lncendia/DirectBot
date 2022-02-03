@@ -16,8 +16,22 @@ public class EnterDateCommand : ITextCommand
         if (TimeSpan.TryParse(message.Text, out var timeSpan))
         {
             var timeEnter = DateTimeOffset.Now.Add(timeSpan.Duration());
-            foreach (var work in await serviceContainer.WorkService.GetUserActiveWorksAsync(user!))
-                await serviceContainer.WorkerService.ScheduleWorkAsync(work, timeEnter);
+            var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+
+            if (work == null || work.Instagrams.Any())
+            {
+                await client.SendTextMessageAsync(message.Chat.Id,
+                    "Ошибка. Работа отсутсвтует или не содержит инстаграм(ы).", replyMarkup: MainKeyboard.Main);
+                return;
+            }
+
+            var result = await serviceContainer.WorkerService.ScheduleWorkAsync(work, timeEnter);
+            if (!result.Succeeded)
+            {
+                await client.SendTextMessageAsync(message.From!.Id,
+                    $"Ошибка при запуске работы: {result.ErrorMessage}.", replyMarkup: MainKeyboard.Main);
+                return;
+            }
 
             user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);

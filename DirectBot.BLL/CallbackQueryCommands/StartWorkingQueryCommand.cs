@@ -32,6 +32,17 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
+        var work = new WorkDto
+        {
+            User = user
+        };
+        var result = await serviceContainer.WorkService.AddAsync(work);
+        if (!result.Succeeded)
+        {
+            await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");
+            return;
+        }
+
         user.State = State.SelectAccounts;
         await serviceContainer.UserService.UpdateAsync(user);
 

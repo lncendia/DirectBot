@@ -13,8 +13,8 @@ public class EnterCountCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var works = await serviceContainer.WorkService.GetUserActiveWorksAsync(user!);
-        if (!works.Any())
+        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        if (work == null)
         {
             user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
@@ -30,11 +30,8 @@ public class EnterCountCommand : ITextCommand
             return;
         }
 
-        foreach (var work in works)
-        {
-            work.CountUsers = count;
-            await serviceContainer.WorkService.UpdateAsync(work);
-        }
+        work.CountUsers = count;
+        await serviceContainer.WorkService.UpdateAsync(work);
 
         user!.State = State.SelectTimeMode;
         await serviceContainer.UserService.UpdateAsync(user);

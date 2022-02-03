@@ -20,7 +20,7 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
 
         var id = int.Parse(query.Data![12..]);
         var work = await serviceContainer.WorkService.GetAsync(id);
-        if (work == null || work.Instagram!.User!.Id != user.Id)
+        if (work == null || work.User!.Id != user.Id)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "Вы не можете перезапустить эту работу.");
@@ -29,7 +29,6 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
 
         var newWork = new WorkDto
         {
-            Instagram = work.Instagram,
             Message = work.Message,
             LowerInterval = work.LowerInterval,
             UpperInterval = work.UpperInterval,
@@ -37,6 +36,7 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             Hashtag = work.Hashtag,
             FileIdentifier = work.FileIdentifier
         };
+        //TODO: Add instagrams
 
         var result = await serviceContainer.WorkService.AddAsync(newWork);
         if (!result.Succeeded)

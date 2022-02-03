@@ -30,8 +30,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
 
     public async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersAsync(WorkDto workDto, CancellationToken token)
     {
-        if (workDto.Instagram == null) throw new NullReferenceException();
-        var api = await BuildApiAsync(workDto.Instagram);
+        if (workDto.Instagrams == null || workDto.Instagrams.Any()) throw new InvalidOperationException();
+        var api = await BuildApiAsync(workDto.Instagrams.First());
         return workDto.Type switch
         {
             WorkType.Subscriptions => await GetUsersFromFollowingAsync(api, workDto.CountUsers, token),
@@ -45,7 +45,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
-        var builder = InstaApiBuilder.CreateBuilder();//.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
+        var builder =
+            InstaApiBuilder.CreateBuilder(); //.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
