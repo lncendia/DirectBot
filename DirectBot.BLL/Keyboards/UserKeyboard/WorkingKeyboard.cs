@@ -79,6 +79,14 @@ public static class WorkingKeyboard
             new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
         });
 
+    public static readonly InlineKeyboardMarkup SelectTypeForManyAccount = new(
+        new List<List<InlineKeyboardButton>>
+        {
+            new() {InlineKeyboardButton.WithCallbackData("1️⃣ Хештег", $"type_{WorkType.Hashtag.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Файл", $"type_{WorkType.File.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
+        });
+
     public static InlineKeyboardMarkup StopWork(int id) =>
         new(InlineKeyboardButton.WithCallbackData("⏹ Остановить", $"stopWork_{id}"));
 }

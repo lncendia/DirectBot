@@ -51,7 +51,9 @@ public class EnterSubscribeDataCommand : ITextCommand
 
         if (result.Succeeded)
         {
-            await client.SendTextMessageAsync(user!.Id, "Успешно. Вы в главном меню.");
+            user!.State = State.Main;
+            await serviceContainer.UserService.UpdateAsync(user);
+            await client.SendTextMessageAsync(user.Id, "Успешно. Вы в главном меню.");
             await client.SendTextMessageAsync(user2.Id, $"Администратор активировал вам подписку до {date:D}");
         }
         else

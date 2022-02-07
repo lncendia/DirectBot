@@ -13,19 +13,21 @@ public class EnterHashtagCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-                var work = user!.CurrentWork == null
+        var work = user!.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id, "У вас нет активных задач. Вы в главном меню.");
             return;
         }
 
 
-        work.Hashtag = message.Text;
+        var hashtag = message.Text!.Trim(' ');
+        if (hashtag[0] == '#') hashtag = hashtag[1..];
+        work.Hashtag = hashtag;
         await serviceContainer.WorkService.UpdateAsync(work);
 
         user!.State = State.EnterCountUsers;

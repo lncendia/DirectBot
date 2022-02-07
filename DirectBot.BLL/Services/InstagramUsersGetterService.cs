@@ -99,7 +99,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
                 .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
                 .ToList())
-            : Result<List<InstaUser>>.Fail(result.Info.Message);
+            : Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
     }
 
     private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api,
@@ -115,7 +115,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
                 .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
                 .ToList())
-            : Result<List<InstaUser>>.Fail(result.Info.Message);
+            : Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
     }
 
     private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromHashtagAsync(IInstaApi api,
@@ -127,7 +127,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount),
                 token);
         var x = !resultRecent.Succeeded
-            ? Result<List<InstaUser>>.Fail(resultRecent.Info.Message)
+            ? Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {resultRecent.Info.Message}")
             : Result<List<InstaUser>>.Ok(resultRecent.Value.Medias.DistinctBy(media => media.User.Pk).Take(count)
                 .Select(u => new InstaUser {Pk = u.User.Pk, Username = u.User.UserName}).ToList());
         return x;

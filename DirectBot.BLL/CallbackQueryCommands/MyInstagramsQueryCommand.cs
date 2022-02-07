@@ -1,6 +1,7 @@
 using DirectBot.BLL.Interfaces;
 using DirectBot.BLL.Keyboards.UserKeyboard;
 using DirectBot.Core.Enums;
+using DirectBot.Core.Extensions;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -26,10 +27,10 @@ public class MyInstagramsQueryCommand : ICallbackQueryCommand
             int count = instagram.Password.Length / 2;
             var offsetLength = (instagram.Password.Length - count) / 2;
 
-            string password = instagram.Password[..offsetLength] + new String('*', count) +
-                              instagram.Password[(offsetLength + count)..];
+            string password = (instagram.Password[..offsetLength] + new String('*', count) +
+                              instagram.Password[(offsetLength + count)..]).ToHtmlStyle();
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                $"Имя пользователя: <code>{instagram.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
+                $"Имя пользователя: <code>{instagram.Username.ToHtmlStyle()}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
                 replyMarkup: InstagramLoginKeyboard.InstagramMain(instagram));
         }
 
@@ -44,7 +45,7 @@ public class MyInstagramsQueryCommand : ICallbackQueryCommand
                               instagram.Password[(offsetLength + count)..];
 
             await client.SendTextMessageAsync(query.From.Id,
-                $"Имя пользователя: <code>{instagram.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
+                $"Имя пользователя: <code>{instagram.Username.ToHtmlStyle()}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
                 replyMarkup: InstagramLoginKeyboard.InstagramMain(instagram));
         }
     }

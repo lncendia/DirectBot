@@ -13,12 +13,12 @@ public class EnterOffsetCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-                var work = user!.CurrentWork == null
+        var work = user!.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id, "У вас нет активных задач. Вы в главном меню.");
             return;
@@ -46,11 +46,14 @@ public class EnterOffsetCommand : ITextCommand
         await serviceContainer.WorkService.UpdateAsync(work);
 
 
-        user!.State = State.SelectType;
+        user.State = State.SelectType;
         await serviceContainer.UserService.UpdateAsync(user);
 
 
-        await client.SendTextMessageAsync(message.Chat.Id, "Выберите тип:", replyMarkup: WorkingKeyboard.SelectType);
+        await client.SendTextMessageAsync(message.Chat.Id, "Выберите тип:",
+            replyMarkup: work.Instagrams.Count > 1
+                ? WorkingKeyboard.SelectTypeForManyAccount
+                : WorkingKeyboard.SelectType);
     }
 
     public bool Compare(Message message, UserDto? user)

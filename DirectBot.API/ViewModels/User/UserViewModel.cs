@@ -20,4 +20,10 @@ public class UserViewModel
     [Required(ErrorMessage = "Поле не должно быть пустым")]
     [Display(Name = "Заблокирован")]
     public bool IsBanned { get; set; }
+    
+    [Display(Name = "Текущий инстаграм")]
+    public int? CurrentInstagramId { get; set; }
+    
+    [Display(Name = "Текущая работа")]
+    public int? CurrentWorkId { get; set; }
 }

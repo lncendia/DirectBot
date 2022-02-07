@@ -13,7 +13,17 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<ProxyDto, ProxyViewModel>();
-        CreateMap<UserDto, UserViewModel>().ReverseMap();
+        CreateMap<UserDto, UserViewModel>().ForMember(model => model.CurrentInstagramId,
+                x => x.MapFrom((dto, _) => dto.CurrentInstagram?.Id))
+            .ForMember(model => model.CurrentWorkId,
+                x => x.MapFrom((dto, _) => dto.CurrentWork?.Id));
+        CreateMap<UserViewModel, UserDto>().ForMember(model => model.CurrentInstagram,
+                x => x.MapFrom((dto, _) =>
+                    dto.CurrentInstagramId == null ? null : new InstagramLiteDto {Id = dto.CurrentInstagramId.Value}))
+            .ForMember(model => model.CurrentWork,
+                x => x.MapFrom((dto, _) =>
+                    dto.CurrentWorkId == null ? null : new WorkLiteDto {Id = dto.CurrentWorkId.Value}));
+
         CreateMap<SubscribeDto, SubscribeViewModel>().ForMember(x => x.UserId,
             expression => expression.MapFrom((dto, _) => dto.User?.Id));
 

@@ -13,10 +13,10 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
         ServiceContainer serviceContainer)
     {
         var type = (WorkType) Enum.Parse(typeof(WorkType), query.Data![5..]);
-                var work = user!.CurrentWork == null
+        var work = user!.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
-        if (work == null)
+        if (work?.Instagrams == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
             return;
@@ -29,7 +29,14 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
         {
             case WorkType.Subscriptions:
             case WorkType.Subscribers:
-                user!.State = State.EnterCountUsers;
+                if (work.Instagrams.Count > 1)
+                {
+                    await client.AnswerCallbackQueryAsync(query.Id,
+                        "Работы такого типа можно запустить только с одним инстаграмом.");
+                    return;
+                }
+
+                user.State = State.EnterCountUsers;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                     "Введите число получателей. Должно быть не менее 1 и не более 500.",
                     replyMarkup: MainKeyboard.Main);
