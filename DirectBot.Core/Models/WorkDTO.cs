@@ -6,7 +6,7 @@ public class WorkDto
 {
     public int Id { get; set; }
     public UserDto? User { get; set; }
-    public List<InstagramDto> Instagrams { get; set; } = new();
+    public List<InstagramLiteDto> Instagrams { get; set; } = new();
     public string? Message { get; set; }
     public int UpperInterval { get; set; }
     public int LowerInterval { get; set; }
@@ -49,4 +49,16 @@ public class WorkDto
 
         return workString;
     }
+}
+
+public class WorkLiteDto
+{
+    public int Id { get; set; }
+    public string? Message { get; set; }
+    public int UpperInterval { get; set; }
+    public int LowerInterval { get; set; }
+    public string? Hashtag { get; set; }
+    public string? FileIdentifier { get; set; }
+    public int CountUsers { get; set; }
+    public WorkType Type { get; set; }
 }

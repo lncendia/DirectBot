@@ -26,7 +26,13 @@ public class ApplicationDbContext : DbContext
     {
         modelBuilder.Entity<User>()
             .HasMany(c => c.Instagrams).WithOne(c => c.User).HasForeignKey(instagram => instagram.UserId);
-        
+        modelBuilder.Entity<User>()
+            .HasOne(c => c.CurrentInstagram).WithOne().HasForeignKey<User>(user => user.CurrentInstagramId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<User>()
+            .HasOne(c => c.CurrentWork).WithOne().HasForeignKey<User>(user => user.CurrentWorkId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<User>()
             .HasMany(c => c.Payments).WithOne(c => c.User).HasForeignKey(payment => payment.UserId);
 

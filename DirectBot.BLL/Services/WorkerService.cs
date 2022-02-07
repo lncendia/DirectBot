@@ -18,6 +18,11 @@ public class WorkerService : IWorkerService
 
     public Task<IOperationResult> StartWorkAsync(WorkDto work)
     {
+        if (!work.Instagrams.Any())
+            return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не содержит инстаграм(ы)"));
+        if (work.IsCompleted)
+            return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не может быть запущена"));
+
         work.JobId = BackgroundJob.Enqueue(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None));
         BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
             JobContinuationOptions.OnAnyFinishedState);
@@ -27,6 +32,10 @@ public class WorkerService : IWorkerService
 
     public Task<IOperationResult> ScheduleWorkAsync(WorkDto work, DateTimeOffset offset)
     {
+        if (!work.Instagrams.Any())
+            return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не содержит инстаграм(ы)"));
+        if (work.IsCompleted)
+            return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не может быть запущена"));
         work.JobId =
             BackgroundJob.Schedule(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None), offset);
         BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
@@ -37,10 +46,10 @@ public class WorkerService : IWorkerService
 
     public Task<IOperationResult> CancelWorkAsync(WorkDto work)
     {
-        if (string.IsNullOrEmpty(work.JobId)) throw new NullReferenceException("JobId in null");
+        if (string.IsNullOrEmpty(work.JobId))
+            return Task.FromResult((IOperationResult) OperationResult.Fail("JobId in null"));
         var result = BackgroundJob.Delete(work.JobId);
         if (!result) OperationResult.Fail("Failed to stop work");
-        work.IsCompleted = true;
         work.IsCanceled = true;
         return _workService.UpdateAsync(work);
     }

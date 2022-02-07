@@ -53,13 +53,11 @@ public static class InstagramLoginKeyboard
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public static InlineKeyboardMarkup InstagramMain(int page, InstagramDto instagram)
+    public static InlineKeyboardMarkup InstagramMain(InstagramDto instagram)
     {
         var list = new List<InlineKeyboardButton>
         {
-            InlineKeyboardButton.WithCallbackData("⬅", $"myInstagrams_{page - 1}"),
             InlineKeyboardButton.WithCallbackData("🖊", $"edit_{instagram.Id}"),
-            InlineKeyboardButton.WithCallbackData("➡", $"myInstagrams_{page + 1}")
         };
         List<InlineKeyboardButton> keyboard;
         if (instagram.IsActive)
@@ -81,7 +79,7 @@ public static class InstagramLoginKeyboard
         new List<List<InlineKeyboardButton>>
         {
             new() {InlineKeyboardButton.WithCallbackData("🆕 Добавить", "enterData")},
-            new() {InlineKeyboardButton.WithCallbackData("🗒 Мои аккаунты", "myInstagrams_1")}
+            new() {InlineKeyboardButton.WithCallbackData("🗒 Мои аккаунты", "myInstagrams")}
         });
 
 

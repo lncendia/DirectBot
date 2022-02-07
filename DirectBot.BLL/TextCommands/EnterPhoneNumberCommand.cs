@@ -1,6 +1,5 @@
 ﻿using DirectBot.BLL.Interfaces;
 using DirectBot.BLL.Keyboards.UserKeyboard;
-using DirectBot.BLL.Services;
 using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
@@ -14,7 +13,9 @@ public class EnterPhoneNumberCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        var instagram = user!.CurrentInstagram == null
+            ? null
+            : await serviceContainer.InstagramService.GetAsync(user.CurrentInstagram.Id);
         if (instagram == null)
         {
             await client.SendTextMessageAsync(message.From!.Id,
@@ -28,7 +29,7 @@ public class EnterPhoneNumberCommand : ITextCommand
         var result = await serviceContainer.InstagramLoginService.SubmitPhoneNumberAsync(instagram, message.Text!);
         if (result.Succeeded)
         {
-            user!.State = State.ChallengeRequiredAccept;
+            user.State = State.ChallengeRequiredAccept;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.From!.Id,
                 "Код отправлен. Введите код из сообщения.", replyMarkup: MainKeyboard.Main);

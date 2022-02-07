@@ -29,8 +29,8 @@ public class EditInstagramQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        instagram.IsSelected = true;
-        await serviceContainer.InstagramService.UpdateAsync(instagram);
+        user.CurrentInstagram = new InstagramLiteDto {Id = instagram.Id, Username = instagram.Username};
+        await serviceContainer.UserService.UpdateAsync(user);
         user.State = State.EnterEditInstagramData;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,

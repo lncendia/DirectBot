@@ -64,7 +64,4 @@ public class InstagramService : IInstagramService
 
     public Task<int> GetUserActiveInstagramsCountAsync(UserDto user) =>
         _instagramRepository.GetUserInstagramsCountAsync(user, true);
-
-    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto) =>
-        _instagramRepository.GetUserSelectedInstagramAsync(userDto);
 }

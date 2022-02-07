@@ -61,8 +61,4 @@ public class InstagramRepository : IInstagramRepository
     public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page) =>
         _context.Instagrams.Where(instagram => instagram.UserId == user.Id)
             .Skip(page - 1).ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-
-    public Task<InstagramDto?> GetUserSelectedInstagramAsync(UserDto userDto) =>
-        _context.Instagrams.Where(instagram => instagram.UserId == userDto.Id && instagram.IsSelected)
-            .ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 }

@@ -8,7 +8,15 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<UserDto, User>().ReverseMap();
+        CreateMap<UserDto, User>().ForMember(user => user.CurrentInstagramId,
+                expression => expression.MapFrom((dto, _) => dto.CurrentInstagram?.Id))
+            .ForMember(user => user.CurrentInstagram,
+                expression => expression.Ignore())
+            .ForMember(user => user.CurrentInstagram,
+                expression => expression.MapFrom((dto, _) => dto.CurrentInstagram?.Id))
+            .ForMember(user => user.CurrentWork,
+                expression => expression.Ignore());
+        CreateMap<User, UserDto>();
 
 
         CreateMap<InstagramDto, Instagram>()
@@ -20,6 +28,7 @@ public class MappingProfile : Profile
             .ForMember(x => x.Proxy, expression => expression.Ignore());
 
         CreateMap<Instagram, InstagramDto>();
+        CreateMap<Instagram, InstagramLiteDto>();
 
 
         CreateMap<ProxyDto, Proxy>().ForMember(x => x.Instagrams, expression => expression.Ignore());
@@ -33,10 +42,12 @@ public class MappingProfile : Profile
 
 
         CreateMap<WorkDto, Work>()
-            .ForMember(x => x.User,
+            .ForMember(x => x.UserId,
                 expression => expression.MapFrom((dto, _) => dto.User?.Id))
-            .ForMember(x => x.Instagrams, expression => expression.Ignore());
+            .ForMember(x => x.Instagrams, expression => expression.Ignore())
+            .ForMember(x => x.User, expression => expression.Ignore());
         CreateMap<Work, WorkDto>();
+        CreateMap<Work, WorkLiteDto>();
 
 
         CreateMap<PaymentDto, Payment>()

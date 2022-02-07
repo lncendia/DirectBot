@@ -43,8 +43,9 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
+        user.CurrentWork = new WorkLiteDto {Id = work.Id};
         user.State = State.SelectAccounts;
-        await serviceContainer.UserService.UpdateAsync(user);
+        var resul4t = await serviceContainer.UserService.UpdateAsync(user);
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Выберите аккаунты:",

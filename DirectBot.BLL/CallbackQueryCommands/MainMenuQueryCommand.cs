@@ -12,14 +12,9 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
-        if (instagram != null)
-        {
-            instagram.IsSelected = false;
-            await serviceContainer.InstagramService.UpdateAsync(instagram);
-        }
-
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work != null)
         {
             var result = await serviceContainer.WorkService.DeleteAsync(work);
@@ -30,9 +25,10 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
                 return;
             }
         }
-
-        user!.State = State.Main;
-        await serviceContainer.UserService.UpdateAsync(user);
+        user.CurrentWork = null;
+        user.CurrentInstagram = null;
+        user.State = State.Main;
+        var result4 = await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Вы в главном меню.");
     }

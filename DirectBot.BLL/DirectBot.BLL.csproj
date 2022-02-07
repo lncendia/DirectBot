@@ -29,8 +29,6 @@
       <Compile Remove="CallbackQueryCommands\GoBackQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\ChangeProxyQueryCommand.cs" />
       <Compile Remove="CallbackQueryCommands\SelectModeQueryCommand.cs" />
-      <Compile Remove="CallbackQueryCommands\AdminSubscribesQueryCommand.cs" />
-      <Compile Remove="CallbackQueryCommands\AdminMailingQueryCommand.cs" />
     </ItemGroup>
 
     <ItemGroup>

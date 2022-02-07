@@ -12,7 +12,9 @@ public class ChallengeEmailQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        var instagram = user!.CurrentInstagram == null
+            ? null
+            : await serviceContainer.InstagramService.GetAsync(user.CurrentInstagram.Id);
         if (instagram == null)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,

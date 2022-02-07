@@ -13,7 +13,9 @@ public class EnterEditInstagramDataCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        var instagram = user!.CurrentInstagram == null
+            ? null
+            : await serviceContainer.InstagramService.GetAsync(user.CurrentInstagram.Id);
         if (instagram == null)
         {
             await client.SendTextMessageAsync(message.From!.Id,
@@ -35,9 +37,9 @@ public class EnterEditInstagramDataCommand : ITextCommand
         instagram.Username = data[0];
         instagram.Password = data[1];
         instagram.IsActive = false;
-        instagram.IsSelected = false;
         await serviceContainer.InstagramService.UpdateAsync(instagram);
-        user!.State = State.Main;
+        user.CurrentInstagram = null;
+        user.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.SendTextMessageAsync(message.Chat.Id,
             "Инстаграм успешно изменён.", replyMarkup: InstagramLoginKeyboard.Activate(instagram.Id));

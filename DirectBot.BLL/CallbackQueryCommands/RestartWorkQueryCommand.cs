@@ -34,9 +34,9 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             UpperInterval = work.UpperInterval,
             Type = work.Type,
             Hashtag = work.Hashtag,
-            FileIdentifier = work.FileIdentifier
+            FileIdentifier = work.FileIdentifier,
+            User = user
         };
-        //TODO: Add instagrams
 
         var result = await serviceContainer.WorkService.AddAsync(newWork);
         if (!result.Succeeded)
@@ -46,6 +46,13 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             return;
         }
 
+        foreach (var instagram in work.Instagrams)
+        {
+            var inst = await serviceContainer.InstagramService.GetAsync(instagram.Id);
+            if (inst != null) await serviceContainer.WorkService.AddInstagramToWork(newWork, inst);
+        }
+
+        user.CurrentWork = new WorkLiteDto {Id = newWork.Id};
         user.State = State.EnterCountUsers;
         await serviceContainer.UserService.UpdateAsync(user);
 

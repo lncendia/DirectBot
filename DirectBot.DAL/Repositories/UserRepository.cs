@@ -32,19 +32,19 @@ public class UserRepository : IUserRepository
 
     public async Task DeleteAsync(UserDto entity)
     {
-        var user = await _context.Users.Persist(_mapper).InsertOrUpdateAsync(entity);
-        await _context.Entry(user).Collection(user1 => user1.Instagrams!).Query()
-            .Include(instagram => instagram.Works).LoadAsync();
-        await _context.Entry(user).Collection(user1 => user1.Subscribes!).LoadAsync();
-        await _context.Entry(user).Collection(user1 => user1.Payments!).LoadAsync();
-        _context.Remove(user);
+        await _context.Users.Persist(_mapper).RemoveAsync(entity);
+        // await _context.Entry(user).Collection(user1 => user1.Instagrams!).Query()
+        //     .Include(instagram => instagram.Works).LoadAsync();
+        // await _context.Entry(user).Collection(user1 => user1.Subscribes!).LoadAsync();
+        // await _context.Entry(user).Collection(user1 => user1.Payments!).LoadAsync();
         await _context.SaveChangesAsync();
     }
 
 
     public async Task<UserDto?> GetAsync(long id)
     {
-        var x = await _context.Users.ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+        var x = await _context.Users //.Include(user => user.CurrentInstagram).Include(user => user.CurrentWork)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(user => user.Id == id);
         return x;
     }

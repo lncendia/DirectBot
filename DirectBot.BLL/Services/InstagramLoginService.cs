@@ -39,7 +39,7 @@ public class InstagramLoginService : IInstagramLoginService
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
         var builder = InstaApiBuilder.CreateBuilder();
-        builder.UseLogger(new DebugLogger(LogLevel.All));
+        //builder.UseLogger(new DebugLogger(LogLevel.All));//TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
@@ -91,11 +91,7 @@ public class InstagramLoginService : IInstagramLoginService
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
-        var requestDelay = RequestDelay.FromSeconds(2, 3);
-        requestDelay.Enable();
-        var builder = InstaApiBuilder.CreateBuilder()
-            .SetRequestDelay(requestDelay)
-            .UseLogger(new DebugLogger(LogLevel.All));
+        var builder = InstaApiBuilder.CreateBuilder();//.UseLogger(new DebugLogger(LogLevel.All)); //TODO:Remove logger
         if (instagram.Proxy != null)
         {
             try

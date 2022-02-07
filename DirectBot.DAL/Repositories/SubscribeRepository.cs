@@ -43,8 +43,8 @@ public class SubscribeRepository : ISubscribeRepository
 
     public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page) =>
         _context.Subscribes.Where(payment => payment.User.Id == user.Id && payment.EndSubscribe > DateTime.UtcNow)
-            .Skip((page - 1) * 5).Take(5)
-            .OrderByDescending(payment => payment.EndSubscribe).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
+            .OrderByDescending(payment => payment.EndSubscribe)
+            .Skip((page - 1) * 5).Take(5).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
     public Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query)

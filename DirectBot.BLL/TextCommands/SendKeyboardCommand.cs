@@ -13,14 +13,9 @@ public class SendKeyboardCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
-        if (instagram != null)
-        {
-            instagram.IsSelected = false;
-            await serviceContainer.InstagramService.UpdateAsync(instagram);
-        }
-
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work != null)
         {
             var result = await serviceContainer.WorkService.DeleteAsync(work);
@@ -32,8 +27,8 @@ public class SendKeyboardCommand : ITextCommand
             }
         }
 
-
-        user!.State = State.Main;
+        user.CurrentInstagram = null;
+        user.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.SendTextMessageAsync(message.From!.Id,
             "Вы в главном меню.", replyMarkup: MainKeyboard.MainReplyKeyboard);

@@ -12,11 +12,13 @@ public class StartNowQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
-        if (work == null || work.Instagrams.Any())
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+        if (work == null)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                "Ошибка. Работа отсутсвтует или не содержит инстаграм(ы).", replyMarkup: MainKeyboard.Main);
+                "Ошибка. Работа отсутсвтует.", replyMarkup: MainKeyboard.Main);
             return;
         }
 
@@ -28,7 +30,8 @@ public class StartNowQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user!.State = State.Main;
+        user.CurrentWork = null;
+        user.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Задача успешно запущена, вы в главном меню.");

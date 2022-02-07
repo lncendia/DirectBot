@@ -9,19 +9,22 @@ namespace DirectBot.BLL.Services;
 public class BackgroundJobService : IBackgroundJobService
 {
     private readonly IInstagramUsersGetterService _getterService;
+    private readonly IInstagramService _instagramService;
     private readonly IMailingService _mailingService;
     private readonly IWorkService _workService;
     private readonly IWorkNotifier _workNotifier;
     private readonly IMessageParser _messageParser;
 
     public BackgroundJobService(IInstagramUsersGetterService getterService, IWorkService workService,
-        IMailingService mailingService, IWorkNotifier workNotifier, IMessageParser messageParser)
+        IMailingService mailingService, IWorkNotifier workNotifier, IMessageParser messageParser,
+        IInstagramService instagramService)
     {
         _getterService = getterService;
         _workService = workService;
         _mailingService = mailingService;
         _workNotifier = workNotifier;
         _messageParser = messageParser;
+        _instagramService = instagramService;
     }
 
     [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
@@ -32,9 +35,9 @@ public class BackgroundJobService : IBackgroundJobService
         if (work.CountErrors == 0 && work.CountSuccess == 0)
             await _workNotifier.NotifyStartAsync(work);
 
-        if (!work.Instagrams.All(dto => dto.IsActive))
+        if (!work.Instagrams.All(dto => dto.IsActive) || !work.Instagrams.Any())
         {
-            work.Message = "Инстаграмы не активны.";
+            work.ErrorMessage = "Инстаграмы не активны.";
             await _workService.UpdateWithoutStatusAsync(work);
             return;
         }
@@ -64,10 +67,9 @@ public class BackgroundJobService : IBackgroundJobService
     {
         var text = _messageParser.Split(work.Message!);
         var vocabularies = _messageParser.GetVocabularies(work.Message!);
-
+        var instagrams = (await GetInstagramsAsync(work.Instagrams)).Select(dto => (dto, 0)).ToList();
 
         var rnd = new Random();
-        var instagrams = work.Instagrams.Select(dto => (dto, 0)).ToList();
         for (var i = 0; i < users.Count; i++)
         {
             try
@@ -82,9 +84,11 @@ public class BackgroundJobService : IBackgroundJobService
 
             if (instagrams.Count == 0)
             {
-                work.ErrorMessage = $"Не удалось получить пользователей: {users.ErrorMessage}";
+                work.ErrorMessage = "Из-за большого количества ошибок работа остановлена.";
                 await _workService.UpdateWithoutStatusAsync(work);
+                return;
             }
+
             var inst = instagrams[i % work.Instagrams.Count];
             var result =
                 await _mailingService.SendMessageAsync(inst.dto, _messageParser.Generate(text, vocabularies), users[i]);
@@ -95,6 +99,18 @@ public class BackgroundJobService : IBackgroundJobService
                 instagrams.Remove(inst);
             }
         }
+    }
+
+    private async Task<List<InstagramDto>> GetInstagramsAsync(List<InstagramLiteDto> instagramLiteDtos)
+    {
+        var list = new List<InstagramDto>();
+        foreach (var instagram in instagramLiteDtos)
+        {
+            var instagramDto = await _instagramService.GetAsync(instagram.Id);
+            if (instagramDto is {IsActive: true}) list.Add(instagramDto);
+        }
+
+        return list;
     }
 
     private void HandleResult(IOperationResult result, WorkDto work, (InstagramDto, int) inst)

@@ -19,34 +19,38 @@ public class MyInstagramsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var page = int.Parse(query.Data![13..]);
-        if (page < 1)
+        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsAsync(user);
+        if (instagrams.Any())
         {
-            await client.AnswerCallbackQueryAsync(query.Id, "Вы в конце списка.");
-            return;
+            var instagram = instagrams.First();
+            int count = instagram.Password.Length / 2;
+            var offsetLength = (instagram.Password.Length - count) / 2;
+
+            string password = instagram.Password[..offsetLength] + new String('*', count) +
+                              instagram.Password[(offsetLength + count)..];
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                $"Имя пользователя: <code>{instagram.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
+                replyMarkup: InstagramLoginKeyboard.InstagramMain(instagram));
         }
 
-        var instagram = await serviceContainer.InstagramService.GetUserInstagramsAsync(user, page);
-        if (instagram == null)
+
+        for (int i = 1; i < instagrams.Count; i++)
         {
-            await client.AnswerCallbackQueryAsync(query.Id, "Больше нет аккаунтов.");
-            return;
+            var instagram = instagrams[i];
+            int count = instagram.Password.Length / 2;
+            var offsetLength = (instagram.Password.Length - count) / 2;
+
+            string password = instagram.Password[..offsetLength] + new String('*', count) +
+                              instagram.Password[(offsetLength + count)..];
+
+            await client.SendTextMessageAsync(query.From.Id,
+                $"Имя пользователя: <code>{instagram.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
+                replyMarkup: InstagramLoginKeyboard.InstagramMain(instagram));
         }
-
-
-        int count = instagram.Password.Length / 2;
-        var offsetLength = (instagram.Password.Length - count) / 2;
-
-        string password = instagram.Password[..offsetLength] + new String('*', count) +
-                          instagram.Password[(offsetLength + count)..];
-
-        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-            $"Имя пользователя: <code>{instagram.Username}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
-            replyMarkup: InstagramLoginKeyboard.InstagramMain(page, instagram));
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)
     {
-        return query.Data!.StartsWith("myInstagrams");
+        return query.Data == "myInstagrams";
     }
 }

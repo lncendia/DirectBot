@@ -13,7 +13,9 @@ public class EnterOffsetCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+                var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
             user!.State = State.Main;

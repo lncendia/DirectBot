@@ -6,30 +6,48 @@ using DirectBot.Core.Services;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
 using InstagramApiSharp.Classes;
-using InstagramApiSharp.Logger;
 
 namespace DirectBot.BLL.Services;
 
 public class MailingService : IMailingService
 {
     private readonly IProxyService _proxyService;
+    private readonly IInstagramService _instagramService;
 
-    public MailingService(IProxyService proxyService) => _proxyService = proxyService;
+    public MailingService(IProxyService proxyService, IInstagramService instagramService)
+    {
+        _proxyService = proxyService;
+        _instagramService = instagramService;
+    }
 
     public async Task<IOperationResult> SendMessageAsync(InstagramDto instagram, string message,
         InstaUser instaUser)
     {
-        var api = await BuildApiAsync(instagram);
-        var result = await api.MessagingProcessor.SendDirectTextAsync(instaUser.Pk.ToString(), null, message);
-        if (result.Succeeded && result.Info.ResponseType == ResponseType.OK) return OperationResult.Ok();
-        return OperationResult.Fail(result.Info.Message);
+        try
+        {
+            var api = await BuildApiAsync(instagram);
+            var result = await api.MessagingProcessor.SendDirectTextAsync(instaUser.Pk.ToString(), null, message);
+            if (result.Succeeded && result.Info.ResponseType == ResponseType.OK) return OperationResult.Ok();
+            return OperationResult.Fail(result.Info.Message);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail(ex.Message);
+        }
     }
 
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
-        if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
-        var builder = InstaApiBuilder.CreateBuilder()
-            .UseLogger(new DebugLogger(LogLevel.All));
+        if (instagram.Proxy == null)
+        {
+            var instagramDto = await _instagramService.GetAsync(instagram.Id);
+            if (instagramDto == null) throw new NullReferenceException("Не удалось получить инстаграм");
+            await _proxyService.SetProxyAsync(instagramDto);
+            instagram.Proxy = instagramDto.Proxy;
+        }
+
+        var builder = InstaApiBuilder.CreateBuilder();
+        //.UseLogger(new DebugLogger(LogLevel.All));
         if (instagram.Proxy != null)
         {
             try

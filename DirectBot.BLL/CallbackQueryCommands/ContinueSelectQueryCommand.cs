@@ -12,14 +12,16 @@ public class ContinueSelectQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
-        if (work?.Instagrams == null || work.Instagrams.Any())
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+        if (work?.Instagrams == null || !work.Instagrams.Any())
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Вы не выбрали ни одного аккаунта.");
             return;
         }
 
-        user!.State = State.EnterMassage;
+        user.State = State.EnterMassage;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Введите сообщение, которое хотите разослать:",

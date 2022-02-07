@@ -13,7 +13,9 @@ public class EnterChallengeRequireCodeCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var instagram = await serviceContainer.InstagramService.GetUserSelectedInstagramAsync(user!);
+        var instagram = user!.CurrentInstagram == null
+            ? null
+            : await serviceContainer.InstagramService.GetAsync(user.CurrentInstagram.Id);
         if (instagram == null)
         {
             await client.SendTextMessageAsync(message.From!.Id,
@@ -23,7 +25,7 @@ public class EnterChallengeRequireCodeCommand : ITextCommand
             return;
         }
 
-        await client.SendChatActionAsync(user!.Id, ChatAction.Typing);
+        await client.SendChatActionAsync(user.Id, ChatAction.Typing);
         var x = await serviceContainer.InstagramLoginService.SubmitChallengeAsync(instagram, message.Text!);
         switch (x.Value)
         {
@@ -33,9 +35,8 @@ public class EnterChallengeRequireCodeCommand : ITextCommand
                 await serviceContainer.InstagramService.UpdateAsync(instagram);
                 await client.SendTextMessageAsync(message.From!.Id,
                     "Инстаграм успешно активирован.");
-                user!.State = State.Main;
-                instagram!.IsSelected = false;
-                await serviceContainer.InstagramService.UpdateAsync(instagram);
+                user.State = State.Main;
+                user.CurrentInstagram = null;
                 break;
             case LoginResult.ChallengeRequired:
                 await client.SendTextMessageAsync(message.From!.Id,
@@ -52,9 +53,8 @@ public class EnterChallengeRequireCodeCommand : ITextCommand
             default:
                 await client.SendTextMessageAsync(message.From!.Id,
                     $"Ошибка при отправке запроса: ({x.Value}). Попробуйте войти ещё раз.");
-                user!.State = State.Main;
-                instagram.IsSelected = false;
-                await serviceContainer.InstagramService.UpdateAsync(instagram);
+                user.State = State.Main;
+                user.CurrentInstagram = null;
                 break;
         }
 

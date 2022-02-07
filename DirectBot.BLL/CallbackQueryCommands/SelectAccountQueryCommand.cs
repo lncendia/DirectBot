@@ -14,24 +14,25 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
     {
         var id = int.Parse(query.Data![7..]);
         var instagram = await serviceContainer.InstagramService.GetAsync(id);
-
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
             return;
         }
 
-        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user!);
+        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user);
 
-        if (instagram == null || instagram.User!.Id != user!.Id || !instagram.IsActive ||
+        if (instagram == null || instagram.User!.Id != user.Id || !instagram.IsActive ||
             work.Instagrams.Count >= subscribesCount || work.Instagrams.Any(dto => dto.Id == instagram.Id))
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Вы не можете добавить этот инстаграм.");
             return;
         }
-        
-        //TODO: Add instagram to work;
+
+        var result = await serviceContainer.WorkService.AddInstagramToWork(work, instagram);
         if (!result.Succeeded)
         {
             await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");

@@ -10,8 +10,6 @@ using DirectBot.Core.Services;
 using InstagramApiSharp;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
-using InstagramApiSharp.Classes;
-using InstagramApiSharp.Logger;
 using InstagramApiSharp.WebApi;
 using InstagramApiSharp.WebApi.Enums;
 
@@ -21,30 +19,49 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
 {
     private readonly IProxyService _proxyService;
     private readonly IFileDownloader _fileDownloader;
+    private readonly IInstagramService _instagramService;
 
-    public InstagramUsersGetterService(IProxyService proxyService, IFileDownloader fileDownloader)
+    public InstagramUsersGetterService(IProxyService proxyService, IFileDownloader fileDownloader,
+        IInstagramService instagramService)
     {
         _proxyService = proxyService;
         _fileDownloader = fileDownloader;
+        _instagramService = instagramService;
     }
 
     public async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersAsync(WorkDto workDto, CancellationToken token)
     {
-        if (workDto.Instagrams == null || workDto.Instagrams.Any()) throw new InvalidOperationException();
-        var api = await BuildApiAsync(workDto.Instagrams.First());
+        if (!workDto.Instagrams.Any()) return Result<List<InstaUser>>.Fail("Не удалось загрузить инстаграмы.");
+        var instagram = await GetRandomInstagramAsync(workDto);
+        if (instagram is not {IsActive: true})
+            return Result<List<InstaUser>>.Fail("Не удалось получить инстаграм, выбранный для загрузки.");
+        var api = await BuildApiAsync(instagram);
         return workDto.Type switch
         {
             WorkType.Subscriptions => await GetUsersFromFollowingAsync(api, workDto.CountUsers, token),
             WorkType.Subscribers => await GetUsersFromFollowersAsync(api, workDto.CountUsers, token),
             WorkType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, workDto.CountUsers, token),
             WorkType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, workDto.CountUsers, token),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => Result<List<InstaUser>>.Fail("Неизвестный тип работы.")
         };
+    }
+
+    private async Task<InstagramDto?> GetRandomInstagramAsync(WorkDto work)
+    {
+        var instagramId = work.Instagrams[new Random().Next(work.Instagrams.Count)].Id;
+        return await _instagramService.GetAsync(instagramId);
     }
 
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
-        if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
+        if (instagram.Proxy == null)
+        {
+            var instagramDto = await _instagramService.GetAsync(instagram.Id);
+            if (instagramDto == null) throw new NullReferenceException();
+            await _proxyService.SetProxyAsync(instagramDto);
+            instagram.Proxy = instagramDto.Proxy;
+        }
+
         var builder =
             InstaApiBuilder.CreateBuilder(); //.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
@@ -69,7 +86,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         return instaApi;
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowingAsync(IInstaApi api, int count,
+    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowingAsync(IInstaApi api,
+        int count,
         CancellationToken token)
     {
         double pageD = count / 50.0;
@@ -84,7 +102,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             : Result<List<InstaUser>>.Fail(result.Info.Message);
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api, int count,
+    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api,
+        int count,
         CancellationToken token)
     {
         double pageD = count / 50.0;
@@ -99,12 +118,14 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             : Result<List<InstaUser>>.Fail(result.Info.Message);
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromHashtagAsync(IInstaApi api, string hashtag,
+    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromHashtagAsync(IInstaApi api,
+        string hashtag,
         int count, CancellationToken token)
     {
         var pageCount = (int) Math.Ceiling(count / 30.0);
         var resultRecent =
-            await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount), token);
+            await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount),
+                token);
         var x = !resultRecent.Succeeded
             ? Result<List<InstaUser>>.Fail(resultRecent.Info.Message)
             : Result<List<InstaUser>>.Ok(resultRecent.Value.Medias.DistinctBy(media => media.User.Pk).Take(count)
@@ -139,7 +160,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             }
 
             return !records.Any()
-                ? Result<List<InstaUser>>.Fail("Не удалось получить пользователей")
+                ? Result<List<InstaUser>>.Fail("Не удалось загрузить пользователей из файла")
                 : Result<List<InstaUser>>.Ok(records.DistinctBy(record => record.Pk).ToList());
         }
         catch (Exception ex)

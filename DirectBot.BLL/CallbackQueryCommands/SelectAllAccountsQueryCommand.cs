@@ -19,7 +19,9 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+        var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
@@ -27,7 +29,7 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
         }
 
         var instagrams =
-            (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user!))
+            (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user))
             .Where(dto => work.Instagrams.All(workDto => workDto.Id != dto.Id))
             .Take(subscribesCount - work.Instagrams.Count).ToList();
         if (instagrams.Count == 0)
@@ -36,15 +38,16 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        // var works = instagrams.Select(instagram => new WorkDto
-        // {
-        //     Instagram = instagram,
-        // });
-        // foreach (var dto in works)
-        //     await serviceContainer.WorkService.AddAsync(dto);
-        //TODO: Add instagrams to work
+        foreach (var instagram in instagrams)
+        {
+            var result = await serviceContainer.WorkService.AddInstagramToWork(work, instagram);
+            if (result.Succeeded) continue;
+            await client.AnswerCallbackQueryAsync(query.Id,
+                $"Ошибка при добавлении инстаграма {instagram.Username}: {result.ErrorMessage}.");
+            return;
+        }
 
-        user!.State = State.EnterMassage;
+        user.State = State.EnterMassage;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Введите сообщение, которое хотите разослать:", replyMarkup: MainKeyboard.Main);

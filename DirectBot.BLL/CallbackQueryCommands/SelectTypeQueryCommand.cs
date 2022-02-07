@@ -13,7 +13,9 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
         ServiceContainer serviceContainer)
     {
         var type = (WorkType) Enum.Parse(typeof(WorkType), query.Data![5..]);
-        var work = await serviceContainer.WorkService.GetUserSelectedWorkAsync(user!);
+                var work = user!.CurrentWork == null
+            ? null
+            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");

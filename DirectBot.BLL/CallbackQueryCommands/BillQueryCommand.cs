@@ -13,23 +13,23 @@ public class BillQueryCommand : ICallbackQueryCommand
         var payment = await serviceContainer.BillService.GetPaymentAsync(query.Data![5..]);
         if (payment.Succeeded)
         {
-            var subscribe = new SubscribeDto
-            {
-                User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
-            };
-            var result = await serviceContainer.SubscribeService.AddAsync(subscribe);
-            if (!result.Succeeded)
-            {
-                await client.AnswerCallbackQueryAsync(query.Id,
-                    $"Произошла ошибка при добавлении подписки: {result.ErrorMessage}.");
-                return;
-            }
-
             payment.Value!.User = user;
-            result = await serviceContainer.PaymentService.AddAsync(payment.Value);
+            var result = await serviceContainer.PaymentService.AddAsync(payment.Value);
             if (!result.Succeeded)
+            {
                 await client.AnswerCallbackQueryAsync(query.Id,
                     $"Произошла ошибка при добавлении платежа: {result.ErrorMessage}.");
+            }
+
+            int count = (int) (payment.Value!.Cost / serviceContainer.Configuration.Cost);
+            for (int i = 0; i < count; i++)
+            {
+                var subscribe = new SubscribeDto
+                {
+                    User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
+                };
+                await serviceContainer.SubscribeService.AddAsync(subscribe);
+            }
 
             var message = query.Message!.Text!;
             message = message.Replace("❌ Статус: Не оплачено", "✔ Статус: Оплачено");
