@@ -26,7 +26,9 @@ public class MyPaymentsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var payments = await serviceContainer.PaymentService.GetUserPaymentsAsync(user, page);
+        var payments =
+            await serviceContainer.PaymentService.GetUserPaymentsAsync(serviceContainer.Mapper.Map<UserLiteDto>(user),
+                page);
         if (!payments.Any())
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Больше нет платежей.");

@@ -20,7 +20,7 @@ public class MyInstagramsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsAsync(user);
+        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsAsync(serviceContainer.Mapper.Map<UserLiteDto>(user));
         if (instagrams.Any())
         {
             var instagram = instagrams.First();

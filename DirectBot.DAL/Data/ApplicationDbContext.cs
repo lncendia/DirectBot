@@ -1,10 +1,6 @@
 ﻿using DirectBot.DAL.Models;
 using Microsoft.EntityFrameworkCore;
-using Instagram = DirectBot.DAL.Models.Instagram;
-using Proxy = DirectBot.DAL.Models.Proxy;
-using Subscribe = DirectBot.DAL.Models.Subscribe;
-using User = DirectBot.DAL.Models.User;
-using Work = DirectBot.DAL.Models.Work;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace DirectBot.DAL.Data;
 
@@ -31,7 +27,7 @@ public class ApplicationDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<User>()
             .HasOne(c => c.CurrentWork).WithOne().HasForeignKey<User>(user => user.CurrentWorkId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.SetNull); //TODO: Проверить, если зависимая сущность загружена ef
 
         modelBuilder.Entity<User>()
             .HasMany(c => c.Payments).WithOne(c => c.User).HasForeignKey(payment => payment.UserId);
@@ -45,5 +41,11 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Instagram>().HasOne(c => c.Proxy).WithMany(inst => inst.Instagrams)
             .HasForeignKey(c => c.ProxyId);
+        modelBuilder.Entity<Work>().Property(work => work.InstagramPks).HasConversion(s => string.Join(' ', s),
+            s => Array.ConvertAll(s.Split(' ', StringSplitOptions.RemoveEmptyEntries), long.Parse)
+                .ToList(), new ValueComparer<List<long>>(
+                (c1, c2) => c1!.SequenceEqual(c2!),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()));
     }
 }

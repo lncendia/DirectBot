@@ -6,6 +6,7 @@ namespace DirectBot.Core.Repositories;
 
 public interface IProxyRepository : IRepository<ProxyDto, int>
 {
+   Task<List<ProxyDto>> GetAllAsync();
    Task<ProxyDto?> GetRandomProxyAsync();
    Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query);
 }

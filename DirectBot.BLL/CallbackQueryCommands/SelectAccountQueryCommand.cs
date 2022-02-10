@@ -23,7 +23,9 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user);
+        var subscribesCount =
+            await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(
+                serviceContainer.Mapper.Map<UserLiteDto>(user));
 
         if (instagram == null || instagram.User!.Id != user.Id || !instagram.IsActive ||
             work.Instagrams.Count >= subscribesCount || work.Instagrams.Any(dto => dto.Id == instagram.Id))
@@ -32,7 +34,8 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var result = await serviceContainer.WorkService.AddInstagramToWork(work, instagram);
+        var result = await serviceContainer.WorkService.AddInstagramToWork(
+            serviceContainer.Mapper.Map<WorkLiteDto>(work), serviceContainer.Mapper.Map<InstagramLiteDto>(instagram));
         if (!result.Succeeded)
         {
             await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");

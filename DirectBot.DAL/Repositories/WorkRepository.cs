@@ -19,8 +19,8 @@ public class WorkRepository : IWorkRepository
         _mapper = mapper;
     }
 
-    public Task<List<WorkDto>> GetAllAsync() =>
-        _context.Works.ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
+    public Task<List<WorkLiteDto>> GetAllAsync() =>
+        _context.Works.ProjectTo<WorkLiteDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(WorkDto entity)
     {
@@ -50,19 +50,19 @@ public class WorkRepository : IWorkRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
+    public Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page) =>
         _context.Works.Where(work => work.User.Id == userDto.Id).Include(work => work.Instagrams)
             .OrderByDescending(work => work.Id).Skip(page - 1)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
-    public Task<bool> HasActiveWorksAsync(InstagramDto instagram) =>
+    public Task<bool> HasActiveWorksAsync(InstagramLiteDto instagram) =>
         _context.Works.AnyAsync(work =>
             work.Instagrams.Any(instagram1 => instagram1.Id == instagram.Id) && !work.IsCompleted);
 
-    public Task<bool> IsCancelled(WorkDto workDto) =>
-        _context.Works.Select(work => work.IsCanceled).FirstOrDefaultAsync();
+    public Task<bool> IsCancelled(WorkLiteDto workDto) =>
+        _context.Works.Where(work => work.Id == workDto.Id).Select(work => work.IsCanceled).FirstOrDefaultAsync();
 
-    public async Task AddInstagramToWork(WorkDto workDto, InstagramDto instagramDto)
+    public async Task AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto)
     {
         var work = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(workDto);
         var instagram = await _context.Instagrams.Persist(_mapper).InsertOrUpdateAsync(instagramDto);

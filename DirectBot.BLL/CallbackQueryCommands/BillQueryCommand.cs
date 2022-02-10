@@ -13,7 +13,7 @@ public class BillQueryCommand : ICallbackQueryCommand
         var payment = await serviceContainer.BillService.GetPaymentAsync(query.Data![5..]);
         if (payment.Succeeded)
         {
-            payment.Value!.User = user;
+            payment.Value!.User = new UserLiteDto {Id = user!.Id};
             var result = await serviceContainer.PaymentService.AddAsync(payment.Value);
             if (!result.Succeeded)
             {
@@ -26,7 +26,7 @@ public class BillQueryCommand : ICallbackQueryCommand
             {
                 var subscribe = new SubscribeDto
                 {
-                    User = user!, EndSubscribe = DateTime.UtcNow.AddDays(30)
+                    User = new UserLiteDto {Id = user.Id}, EndSubscribe = DateTime.UtcNow.AddDays(30)
                 };
                 await serviceContainer.SubscribeService.AddAsync(subscribe);
             }

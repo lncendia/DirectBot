@@ -8,6 +8,7 @@ public class WorkDto
     public int Id { get; set; }
     public UserDto? User { get; set; }
     public List<InstagramLiteDto> Instagrams { get; set; } = new();
+    public List<long> InstagramPks { get; set; } = new();
     public string? Message { get; set; }
     public int UpperInterval { get; set; }
     public int LowerInterval { get; set; }
@@ -62,4 +63,12 @@ public class WorkLiteDto
     public string? FileIdentifier { get; set; }
     public int CountUsers { get; set; }
     public WorkType Type { get; set; }
+    public DateTime StartTime { get; set; }
+
+    public bool IsCanceled { get; set; }
+    public bool IsCompleted { get; set; }
+    public bool IsSucceeded { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int CountErrors { get; set; }
+    public int CountSuccess { get; set; }
 }

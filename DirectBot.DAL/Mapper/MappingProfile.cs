@@ -17,6 +17,7 @@ public class MappingProfile : Profile
             .ForMember(user => user.CurrentWork,
                 expression => expression.Ignore());
         CreateMap<User, UserDto>();
+        CreateMap<User, UserLiteDto>();
 
 
         CreateMap<InstagramDto, Instagram>()

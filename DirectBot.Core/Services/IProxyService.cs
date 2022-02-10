@@ -6,6 +6,7 @@ namespace DirectBot.Core.Services;
 
 public interface IProxyService : IService<ProxyDto, int>
 {
+    Task<List<ProxyDto>> GetAllAsync(); //TODO: Remove
     Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query);
     Task<IOperationResult> SetProxyAsync(InstagramDto instagram);
 }

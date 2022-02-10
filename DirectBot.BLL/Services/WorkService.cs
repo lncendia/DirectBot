@@ -11,21 +11,16 @@ public class WorkService : IWorkService
 
     public WorkService(IWorkRepository workRepository) => _workRepository = workRepository;
 
-    public Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page) =>
+    public Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page) =>
         _workRepository.GetUserWorksAsync(userDto, page);
 
-    public Task<bool> HasActiveWorksAsync(InstagramDto instagram) => _workRepository.HasActiveWorksAsync(instagram);
-    public Task<bool> IsCancelled(WorkDto workDto) => _workRepository.IsCancelled(workDto);
-
-    public async Task<IOperationResult> AddInstagramToWork(WorkDto workDto, InstagramDto instagramDto)
+    public Task<bool> HasActiveWorksAsync(InstagramLiteDto instagram) => _workRepository.HasActiveWorksAsync(instagram);
+    public Task<bool> IsCancelled(WorkLiteDto workDto) => _workRepository.IsCancelled(workDto);
+    public async Task<IOperationResult> AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto)
     {
         try
         {
             await _workRepository.AddInstagramToWork(workDto, instagramDto);
-            workDto.Instagrams.Add(new InstagramLiteDto
-            {
-                Id = instagramDto.Id, Username = instagramDto.Username, IsActive = instagramDto.IsActive
-            });
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -53,7 +48,7 @@ public class WorkService : IWorkService
     {
         try
         {
-            await _workRepository.AddOrUpdateAsync(entity);
+            await _workRepository.UpdateWithoutStatusAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -64,7 +59,7 @@ public class WorkService : IWorkService
 
     public Task<IOperationResult> AddAsync(WorkDto item) => UpdateAsync(item);
 
-    public Task<List<WorkDto>> GetAllAsync() => _workRepository.GetAllAsync();
+    public Task<List<WorkLiteDto>> GetAllAsync() => _workRepository.GetAllAsync();
 
     public async Task<IOperationResult> DeleteAsync(WorkDto work)
     {

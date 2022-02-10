@@ -29,7 +29,8 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        if (await serviceContainer.WorkService.HasActiveWorksAsync(instagram))
+        if (await serviceContainer.WorkService.HasActiveWorksAsync(
+                serviceContainer.Mapper.Map<InstagramLiteDto>(instagram)))
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "На этом аккаунте есть незавершенные задачи.");

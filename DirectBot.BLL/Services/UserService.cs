@@ -15,10 +15,7 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public Task<List<UserDto>> GetAllAsync()
-    {
-        return _userRepository.GetAllAsync();
-    }
+    public Task<List<UserLiteDto>> GetAllAsync() => _userRepository.GetAllAsync();
 
     public async Task<IOperationResult> DeleteAsync(UserDto entity)
     {
@@ -33,10 +30,7 @@ public class UserService : IUserService
         }
     }
 
-    public Task<UserDto?> GetAsync(long id)
-    {
-        return _userRepository.GetAsync(id);
-    }
+    public Task<UserDto?> GetAsync(long id) => _userRepository.GetAsync(id);
 
     public async Task<IOperationResult> UpdateAsync(UserDto entity)
     {
@@ -54,10 +48,7 @@ public class UserService : IUserService
     public Task<IOperationResult> AddAsync(UserDto item) => UpdateAsync(item);
 
 
-    public Task<int> GetCountAsync()
-    {
-        return _userRepository.GetCountAsync();
-    }
+    public Task<int> GetCountAsync() => _userRepository.GetCountAsync();
 
     public Task<List<UserDto>> GetUsersAsync(UserSearchQuery query) => _userRepository.GetUsersAsync(query);
 }

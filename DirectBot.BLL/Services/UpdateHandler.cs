@@ -1,3 +1,4 @@
+using AutoMapper;
 using DirectBot.BLL.CallbackQueryCommands;
 using DirectBot.BLL.Interfaces;
 using DirectBot.BLL.TextCommands;
@@ -19,13 +20,13 @@ public class UpdateHandler : IUpdateHandler<Update>
         ITelegramBotClient botClient, ILogger<UpdateHandler> logger, IWorkerService workerService,
         ISubscribeService subscribeService, IProxyService proxyService, IBillService billService,
         IWorkService workService, IInstagramService instagramService,
-        IInstagramLoginService instagramLoginService, IPaymentService paymentService)
+        IInstagramLoginService instagramLoginService, IPaymentService paymentService, IMapper mapper)
     {
         _botClient = botClient;
         _logger = logger;
 
         _serviceContainer = new ServiceContainer(userService, workerService, subscribeService, proxyService,
-            billService, instagramLoginService, instagramService, workService, paymentService, configuration);
+            billService, instagramLoginService, instagramService, workService, paymentService, mapper, configuration);
     }
 
     private static readonly List<ITextCommand> TextCommands = new()

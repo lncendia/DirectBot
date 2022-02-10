@@ -53,7 +53,7 @@ public static class InstagramLoginKeyboard
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public static InlineKeyboardMarkup InstagramMain(InstagramDto instagram)
+    public static InlineKeyboardMarkup InstagramMain(InstagramLiteDto instagram)
     {
         var list = new List<InlineKeyboardButton>
         {

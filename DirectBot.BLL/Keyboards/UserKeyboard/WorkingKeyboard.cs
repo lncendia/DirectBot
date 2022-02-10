@@ -27,7 +27,7 @@ public static class WorkingKeyboard
             new() {InlineKeyboardButton.WithCallbackData("🛑 Отмена", "mainMenu")}
         });
 
-    public static InlineKeyboardMarkup Select(IEnumerable<InstagramDto> instagrams)
+    public static InlineKeyboardMarkup Select(IEnumerable<InstagramLiteDto> instagrams)
     {
         var accounts = instagrams.Select(inst => new List<InlineKeyboardButton>
         {
@@ -64,7 +64,7 @@ public static class WorkingKeyboard
             InlineKeyboardButton.WithCallbackData("➡", $"worksHistory_{page + 1}")
         };
 
-        if (!workDto.IsCompleted && !string.IsNullOrEmpty(workDto.JobId))
+        if (!workDto.IsCompleted)
             list.Insert(2, InlineKeyboardButton.WithCallbackData("⏹", $"stopWork_{workDto.Id}"));
         return new InlineKeyboardMarkup(list);
     }

@@ -11,7 +11,7 @@ public class SubscribeService : ISubscribeService
     private readonly ISubscribeRepository _subscribeRepository;
     public SubscribeService(ISubscribeRepository subscribeRepository) => _subscribeRepository = subscribeRepository;
 
-    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page) =>
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserLiteDto user, int page) =>
         _subscribeRepository.GetUserSubscribesAsync(user, page);
 
     public Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query) =>
@@ -19,7 +19,7 @@ public class SubscribeService : ISubscribeService
 
     public Task<List<SubscribeDto>> GetExpiredSubscribes() => _subscribeRepository.GetExpiredSubscribes();
 
-    public Task<int> GetUserSubscribesCountAsync(UserDto user) =>
+    public Task<int> GetUserSubscribesCountAsync(UserLiteDto user) =>
         _subscribeRepository.GetUserSubscribesCountAsync(user);
 
 

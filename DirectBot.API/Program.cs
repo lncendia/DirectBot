@@ -10,7 +10,7 @@ using DirectBot.Core.Services;
 using DirectBot.DAL.Data;
 using DirectBot.DAL.Repositories;
 using Hangfire;
-using Hangfire.MySql;
+using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -77,16 +77,15 @@ builder.Services.AddAutoMapper((mc, automapper) =>
 
 builder.Services.AddHangfire((_, configuration) =>
 {
-    configuration.UseStorage(new MySqlStorage(builder.Configuration.GetConnectionString("Hangfire"),
-        new MySqlStorageOptions
-        {
-            QueuePollInterval = TimeSpan.FromSeconds(15),
-            JobExpirationCheckInterval = TimeSpan.FromHours(1),
-            CountersAggregateInterval = TimeSpan.FromMinutes(5),
-            PrepareSchemaIfNecessary = true,
-            DashboardJobListLimit = 50000,
-            TransactionTimeout = TimeSpan.FromMinutes(1)
-        }));
+    configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("Hangfire2"), new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.Zero,
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true // Migration to Schema 7 is required
+    });
+
     configuration.UseSerializerSettings(new JsonSerializerSettings
         {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
     RecurringJob.AddOrUpdate("subscribesChecker",

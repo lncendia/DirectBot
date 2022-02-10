@@ -4,7 +4,6 @@ using AutoMapper.QueryableExtensions;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
-using DirectBot.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DirectBot.DAL.Repositories;
@@ -20,8 +19,8 @@ public class InstagramRepository : IInstagramRepository
         _mapper = mapper;
     }
 
-    public Task<List<InstagramDto>> GetAllAsync() =>
-        _context.Instagrams.ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).ToListAsync();
+    public Task<List<InstagramLiteDto>> GetAllAsync() =>
+        _context.Instagrams.ProjectTo<InstagramLiteDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(InstagramDto entity)
     {
@@ -43,22 +42,18 @@ public class InstagramRepository : IInstagramRepository
             .FirstOrDefaultAsync(instagram => instagram.Id == id);
     }
 
-    public Task<List<InstagramDto>> GetUserInstagramsAsync(UserDto user, bool onlyActive = false)
+    public Task<List<InstagramLiteDto>> GetUserInstagramsAsync(UserLiteDto user, bool onlyActive = false)
     {
         var query = _context.Instagrams.Include(instagram => instagram.Proxy)
             .Where(instagram => instagram.User.Id == user.Id);
         if (onlyActive) query = query.Where(instagram => instagram.IsActive);
-        return query.ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).ToListAsync();
+        return query.ProjectTo<InstagramLiteDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
-    public Task<int> GetUserInstagramsCountAsync(UserDto user, bool onlyActive = false)
+    public Task<int> GetUserInstagramsCountAsync(UserLiteDto user, bool onlyActive = false)
     {
         var query = _context.Instagrams.AsQueryable();
         if (onlyActive) query = query.Where(instagram => instagram.IsActive);
         return query.CountAsync(instagram => instagram.User.Id == user.Id);
     }
-
-    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page) =>
-        _context.Instagrams.Where(instagram => instagram.UserId == user.Id)
-            .Skip(page - 1).ProjectTo<InstagramDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 }

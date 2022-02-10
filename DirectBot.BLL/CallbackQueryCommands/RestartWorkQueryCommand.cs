@@ -47,10 +47,7 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
         }
 
         foreach (var instagram in work.Instagrams)
-        {
-            var inst = await serviceContainer.InstagramService.GetAsync(instagram.Id);
-            if (inst != null) await serviceContainer.WorkService.AddInstagramToWork(newWork, inst);
-        }
+            await serviceContainer.WorkService.AddInstagramToWork(new WorkLiteDto {Id = newWork.Id}, instagram);
 
         user.CurrentWork = new WorkLiteDto {Id = newWork.Id};
         user.State = State.EnterCountUsers;

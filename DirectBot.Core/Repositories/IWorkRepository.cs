@@ -5,9 +5,10 @@ namespace DirectBot.Core.Repositories;
 
 public interface IWorkRepository : IRepository<WorkDto, int>
 {
+    Task<List<WorkLiteDto>> GetAllAsync();
     public Task UpdateWithoutStatusAsync(WorkDto entity);
-    Task<WorkDto?> GetUserWorksAsync(UserDto userDto, int page);
-    Task<bool> HasActiveWorksAsync(InstagramDto instagram);
-    Task<bool> IsCancelled(WorkDto workDto);
-    Task AddInstagramToWork(WorkDto workDto, InstagramDto instagramDto);
+    Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page);
+    Task<bool> HasActiveWorksAsync(InstagramLiteDto instagram);
+    Task<bool> IsCancelled(WorkLiteDto workDto);
+    Task AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto);
 }

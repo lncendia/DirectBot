@@ -1,3 +1,4 @@
+using AutoMapper;
 using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
@@ -14,10 +15,11 @@ public class BackgroundJobService : IBackgroundJobService
     private readonly IWorkService _workService;
     private readonly IWorkNotifier _workNotifier;
     private readonly IMessageParser _messageParser;
+    private readonly IMapper _mapper;
 
     public BackgroundJobService(IInstagramUsersGetterService getterService, IWorkService workService,
         IMailingService mailingService, IWorkNotifier workNotifier, IMessageParser messageParser,
-        IInstagramService instagramService)
+        IInstagramService instagramService, IMapper mapper)
     {
         _getterService = getterService;
         _workService = workService;
@@ -25,6 +27,7 @@ public class BackgroundJobService : IBackgroundJobService
         _workNotifier = workNotifier;
         _messageParser = messageParser;
         _instagramService = instagramService;
+        _mapper = mapper;
     }
 
     [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
@@ -49,7 +52,7 @@ public class BackgroundJobService : IBackgroundJobService
         }
         catch (OperationCanceledException)
         {
-            if (await _workService.IsCancelled(work)) return;
+            if (await _workService.IsCancelled(_mapper.Map<WorkLiteDto>(work))) return;
             throw;
         }
 
@@ -78,7 +81,7 @@ public class BackgroundJobService : IBackgroundJobService
             }
             catch (OperationCanceledException)
             {
-                if (await _workService.IsCancelled(work)) break;
+                if (await _workService.IsCancelled(_mapper.Map<WorkLiteDto>(work))) break;
                 throw;
             }
 

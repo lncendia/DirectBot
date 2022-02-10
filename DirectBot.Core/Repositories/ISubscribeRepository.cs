@@ -6,8 +6,9 @@ namespace DirectBot.Core.Repositories;
 
 public interface ISubscribeRepository : IRepository<SubscribeDto, int>
 {
-    Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page);
+    Task<List<SubscribeDto>> GetAllAsync();
+    Task<List<SubscribeDto>> GetUserSubscribesAsync(UserLiteDto user, int page);
     Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query);
-    Task<int> GetUserSubscribesCountAsync(UserDto user);
+    Task<int> GetUserSubscribesCountAsync(UserLiteDto user);
     Task<List<SubscribeDto>> GetExpiredSubscribes();
 }

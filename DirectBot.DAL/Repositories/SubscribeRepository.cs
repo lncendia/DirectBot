@@ -41,7 +41,7 @@ public class SubscribeRepository : ISubscribeRepository
             .ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(subscribe => subscribe.Id == id);
 
-    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserDto user, int page) =>
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserLiteDto user, int page) =>
         _context.Subscribes.Where(payment => payment.User.Id == user.Id && payment.EndSubscribe > DateTime.UtcNow)
             .OrderByDescending(payment => payment.EndSubscribe)
             .Skip((page - 1) * 5).Take(5).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
@@ -60,7 +60,7 @@ public class SubscribeRepository : ISubscribeRepository
             .ToListAsync();
     }
 
-    public Task<int> GetUserSubscribesCountAsync(UserDto user) =>
+    public Task<int> GetUserSubscribesCountAsync(UserLiteDto user) =>
         _context.Subscribes.Where(payment => payment.User.Id == user.Id && payment.EndSubscribe > DateTime.UtcNow)
             .CountAsync();
 

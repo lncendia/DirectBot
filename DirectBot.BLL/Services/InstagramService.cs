@@ -11,7 +11,7 @@ public class InstagramService : IInstagramService
 
     public InstagramService(IInstagramRepository instagramRepository) => _instagramRepository = instagramRepository;
 
-    public Task<List<InstagramDto>> GetAllAsync() => _instagramRepository.GetAllAsync();
+    public Task<List<InstagramLiteDto>> GetAllAsync() => _instagramRepository.GetAllAsync();
 
     public async Task<IOperationResult> DeleteAsync(InstagramDto entity)
     {
@@ -50,18 +50,16 @@ public class InstagramService : IInstagramService
         return await UpdateAsync(item);
     }
 
-    public Task<List<InstagramDto>> GetUserInstagramsAsync(UserDto user) =>
+    public Task<List<InstagramLiteDto>> GetUserInstagramsAsync(UserLiteDto user) =>
         _instagramRepository.GetUserInstagramsAsync(user);
 
-    public Task<List<InstagramDto>> GetUserActiveInstagramsAsync(UserDto user) =>
+    public Task<List<InstagramLiteDto>> GetUserActiveInstagramsAsync(UserLiteDto user) =>
         _instagramRepository.GetUserInstagramsAsync(user, true);
+    
 
-    public Task<InstagramDto?> GetUserInstagramsAsync(UserDto user, int page) =>
-        _instagramRepository.GetUserInstagramsAsync(user, page);
-
-    public Task<int> GetUserInstagramsCountAsync(UserDto user) =>
+    public Task<int> GetUserInstagramsCountAsync(UserLiteDto user) =>
         _instagramRepository.GetUserInstagramsCountAsync(user);
 
-    public Task<int> GetUserActiveInstagramsCountAsync(UserDto user) =>
+    public Task<int> GetUserActiveInstagramsCountAsync(UserLiteDto user) =>
         _instagramRepository.GetUserInstagramsCountAsync(user, true);
 }

@@ -19,7 +19,9 @@ public class Work
     public string? Hashtag { get; set; }
     public string? FileIdentifier { get; set; }
 
-
+    public List<long> InstagramPks { get; set; } = new();
+    
+    
     public DateTime StartTime { get; set; }
 
 

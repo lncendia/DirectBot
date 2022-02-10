@@ -10,7 +10,8 @@ namespace DirectBot.BLL.TextCommands;
 
 public class EnterInstagramDataCommand : ITextCommand
 {
-    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message, ServiceContainer serviceContainer)
+    public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
+        ServiceContainer serviceContainer)
     {
         var data = message.Text!.Split(':');
         if (data.Length != 2)
@@ -25,12 +26,12 @@ public class EnterInstagramDataCommand : ITextCommand
         {
             Username = data[0],
             Password = data[1],
-            User = user!
+            User = new UserLiteDto {Id = user!.Id}
         };
         var result = await serviceContainer.InstagramService.AddAsync(instagram);
         if (result.Succeeded)
         {
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id,
                 "Инстаграм успешно добавлен.", replyMarkup: InstagramLoginKeyboard.Activate(instagram.Id));

@@ -20,8 +20,8 @@ public class UserRepository : IUserRepository
         _mapper = mapper;
     }
 
-    public Task<List<UserDto>> GetAllAsync() =>
-        _context.Users.ProjectTo<UserDto>(_mapper.ConfigurationProvider).ToListAsync();
+    public Task<List<UserLiteDto>> GetAllAsync() =>
+        _context.Users.ProjectTo<UserLiteDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(UserDto entity)
     {

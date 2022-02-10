@@ -26,7 +26,9 @@ public class MySubscribesQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var payments = await serviceContainer.SubscribeService.GetUserSubscribesAsync(user, page);
+        var payments =
+            await serviceContainer.SubscribeService.GetUserSubscribesAsync(
+                serviceContainer.Mapper.Map<UserLiteDto>(user), page);
         if (!payments.Any())
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Больше нет подписок.");

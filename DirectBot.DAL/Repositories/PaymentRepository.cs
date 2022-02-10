@@ -39,7 +39,7 @@ public class PaymentRepository : IPaymentRepository
         _context.Payments.Include(payment => payment.User).ProjectTo<PaymentDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(payment => payment.Id == id);
 
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserDto user, int page) =>
+    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserLiteDto user, int page) =>
         _context.Payments.Where(payment => payment.User.Id == user.Id)
             .OrderByDescending(payment => payment.PaymentDate)
             .Skip((page - 1) * 5).Take(5).ProjectTo<PaymentDto>(_mapper.ConfigurationProvider).ToListAsync();
