@@ -29,6 +29,8 @@ public class WorkService : IWorkService
         }
     }
 
+    public Task<List<WorkDto>> GetExpiredSubscribes() => _workRepository.GetExpiredSubscribes();
+
     public Task<WorkDto?> GetAsync(int id) => _workRepository.GetAsync(id);
 
     public async Task<IOperationResult> UpdateAsync(WorkDto entity)
@@ -48,7 +50,7 @@ public class WorkService : IWorkService
     {
         try
         {
-            await _workRepository.UpdateWithoutStatusAsync(entity);
+            await _workRepository.UpdateProcessingInfoAsync(entity);
             return OperationResult.Ok();
         }
         catch (Exception ex)

@@ -10,12 +10,14 @@ namespace DirectBot.API.Controllers;
 public class UserController : Controller
 {
     private readonly IUserService _userService;
+    private readonly IInstagramService _instagramService;
     private readonly IMapper _mapper;
 
-    public UserController(IMapper mapper, IUserService userService)
+    public UserController(IMapper mapper, IUserService userService, IInstagramService instagramService)
     {
         _mapper = mapper;
         _userService = userService;
+        _instagramService = instagramService;
     }
 
     [HttpGet]
@@ -43,7 +45,6 @@ public class UserController : Controller
                 {
                     message = "Пользователь не найден."
                 });
-
         return View(_mapper.Map<UserViewModel>(user));
     }
 

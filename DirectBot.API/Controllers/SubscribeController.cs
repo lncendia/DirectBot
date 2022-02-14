@@ -10,14 +10,14 @@ namespace DirectBot.API.Controllers;
 public class SubscribeController : Controller
 {
     private readonly ISubscribeService _subscribeService;
-    private readonly ISubscribeNotifier _subscribeNotifier;
+    private readonly ISubscribeDeleter _SubscribeDeleter;
     private readonly IMapper _mapper;
 
-    public SubscribeController(IMapper mapper, ISubscribeService subscribeService, ISubscribeNotifier subscribeNotifier)
+    public SubscribeController(IMapper mapper, ISubscribeService subscribeService, ISubscribeDeleter SubscribeDeleter)
     {
         _mapper = mapper;
         _subscribeService = subscribeService;
-        _subscribeNotifier = subscribeNotifier;
+        _SubscribeDeleter = SubscribeDeleter;
     }
 
     [HttpGet]
@@ -38,7 +38,7 @@ public class SubscribeController : Controller
     [HttpGet]
     public IActionResult TriggerCheck()
     {
-        _subscribeNotifier.Trigger();
+        _SubscribeDeleter.Trigger();
         return RedirectToAction("Index",
             new
             {

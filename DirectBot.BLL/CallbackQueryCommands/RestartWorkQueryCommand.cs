@@ -20,7 +20,7 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
 
         var id = int.Parse(query.Data![12..]);
         var work = await serviceContainer.WorkService.GetAsync(id);
-        if (work == null || work.User!.Id != user.Id)
+        if (work == null)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "Вы не можете перезапустить эту работу.");
@@ -35,7 +35,6 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             Type = work.Type,
             Hashtag = work.Hashtag,
             FileIdentifier = work.FileIdentifier,
-            User = user
         };
 
         var result = await serviceContainer.WorkService.AddAsync(newWork);
@@ -49,7 +48,7 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
         foreach (var instagram in work.Instagrams)
             await serviceContainer.WorkService.AddInstagramToWork(new WorkLiteDto {Id = newWork.Id}, instagram);
 
-        user.CurrentWork = new WorkLiteDto {Id = newWork.Id};
+        user.CurrentWork = serviceContainer.Mapper.Map<WorkLiteDto>(newWork);
         user.State = State.EnterCountUsers;
         await serviceContainer.UserService.UpdateAsync(user);
 

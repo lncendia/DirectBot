@@ -9,21 +9,21 @@ using Telegram.Bot.Types.Enums;
 
 namespace DirectBot.BLL.Services;
 
-public class SubscribeNotifier : ISubscribeNotifier
+public class SubscribeDeleter : ISubscribeDeleter
 {
     private readonly ISubscribeService _subscribeService;
     private readonly ITelegramBotClient _telegramBotClient;
-    private readonly ILogger<SubscribeNotifier> _logger;
+    private readonly ILogger<SubscribeDeleter> _logger;
 
-    public SubscribeNotifier(ISubscribeService subscribeService, ITelegramBotClient telegramBotClient,
-        ILogger<SubscribeNotifier> logger)
+    public SubscribeDeleter(ISubscribeService subscribeService, ITelegramBotClient telegramBotClient,
+        ILogger<SubscribeDeleter> logger)
     {
         _subscribeService = subscribeService;
         _telegramBotClient = telegramBotClient;
         _logger = logger;
     }
 
-    public async Task NotifyStartAsync()
+    public async Task StartDeleteAsync()
     {
         var subscribes = await _subscribeService.GetExpiredSubscribes();
         foreach (var subscribe in subscribes)

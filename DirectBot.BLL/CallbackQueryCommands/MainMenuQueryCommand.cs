@@ -28,7 +28,7 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
         user.CurrentWork = null;
         user.CurrentInstagram = null;
         user.State = State.Main;
-        var result4 = await serviceContainer.UserService.UpdateAsync(user);
+        await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Вы в главном меню.");
     }

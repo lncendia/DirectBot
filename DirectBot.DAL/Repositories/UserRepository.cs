@@ -32,11 +32,12 @@ public class UserRepository : IUserRepository
 
     public async Task DeleteAsync(UserDto entity)
     {
-        await _context.Users.Persist(_mapper).RemoveAsync(entity);
-        // await _context.Entry(user).Collection(user1 => user1.Instagrams!).Query()
-        //     .Include(instagram => instagram.Works).LoadAsync();
-        // await _context.Entry(user).Collection(user1 => user1.Subscribes!).LoadAsync();
-        // await _context.Entry(user).Collection(user1 => user1.Payments!).LoadAsync();
+        var user = await _context.Users.Persist(_mapper).InsertOrUpdateAsync(entity);
+        await _context.Entry(user).Collection(user1 => user1.Instagrams!).Query().Include(instagram => instagram.Works)
+            .LoadAsync();
+        var works = _context.Works.Where(work => work.Instagrams.Any(instagram => instagram.User == user));
+        _context.RemoveRange(works);
+        _context.Remove(user);
         await _context.SaveChangesAsync();
     }
 

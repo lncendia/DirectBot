@@ -21,12 +21,12 @@ public class MailingService : IMailingService
     }
 
     public async Task<IOperationResult> SendMessageAsync(InstagramDto instagram, string message,
-        InstaUser instaUser)
+        long instaUserPk)
     {
         try
         {
             var api = await BuildApiAsync(instagram);
-            var result = await api.MessagingProcessor.SendDirectTextAsync(instaUser.Pk.ToString(), null, message);
+            var result = await api.MessagingProcessor.SendDirectTextAsync(instaUserPk.ToString(), null, message);
             if (result.Succeeded && result.Info.ResponseType == ResponseType.OK) return OperationResult.Ok();
             return OperationResult.Fail(result.Info.Message);
         }

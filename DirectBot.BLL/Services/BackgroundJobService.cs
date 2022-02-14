@@ -1,5 +1,3 @@
-using AutoMapper;
-using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;
@@ -15,11 +13,10 @@ public class BackgroundJobService : IBackgroundJobService
     private readonly IWorkService _workService;
     private readonly IWorkNotifier _workNotifier;
     private readonly IMessageParser _messageParser;
-    private readonly IMapper _mapper;
 
     public BackgroundJobService(IInstagramUsersGetterService getterService, IWorkService workService,
         IMailingService mailingService, IWorkNotifier workNotifier, IMessageParser messageParser,
-        IInstagramService instagramService, IMapper mapper)
+        IInstagramService instagramService)
     {
         _getterService = getterService;
         _workService = workService;
@@ -27,16 +24,14 @@ public class BackgroundJobService : IBackgroundJobService
         _workNotifier = workNotifier;
         _messageParser = messageParser;
         _instagramService = instagramService;
-        _mapper = mapper;
     }
 
-    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    public async Task RunAsync(int workId, CancellationToken token)
+
+    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
+    public async Task ProcessingAsync(int workId, CancellationToken token)
     {
         var work = await _workService.GetAsync(workId);
-        if (work == null) return;
-        if (work.CountErrors == 0 && work.CountSuccess == 0)
-            await _workNotifier.NotifyStartAsync(work);
+        if (work == null) return; //TODO: Cancel
 
         if (!work.Instagrams.All(dto => dto.IsActive) || !work.Instagrams.Any())
         {
@@ -45,62 +40,70 @@ public class BackgroundJobService : IBackgroundJobService
             return;
         }
 
-        IResult<List<InstaUser>> users;
-        try
-        {
-            users = await _getterService.GetUsersAsync(work, token);
-        }
-        catch (OperationCanceledException)
-        {
-            if (await _workService.IsCancelled(_mapper.Map<WorkLiteDto>(work))) return;
-            throw;
-        }
 
-        if (!users.Succeeded || users.Value == null)
+        if (!work.InstagramPks.Any())
         {
-            work.ErrorMessage = $"Не удалось получить пользователей: {users.ErrorMessage}";
-            await _workService.UpdateWithoutStatusAsync(work);
-            return;
+            await _workNotifier.NotifyStartAsync(work);
+            var result = await _getterService.GetUsersAsync(work, token);
+            if (result.Succeeded)
+            {
+                work.InstagramPks = result.Value!;
+                await _workService.UpdateWithoutStatusAsync(work);
+            }
+            else
+            {
+                work.ErrorMessage = result.ErrorMessage;
+                await _workService.UpdateWithoutStatusAsync(work);
+                return;
+            }
         }
-
-        await ProcessingAsync(work, users.Value!.Skip(work.CountSuccess + work.CountErrors).ToList(), token);
+        
+        await ProcessingAsync(work, token);
     }
 
-    private async Task ProcessingAsync(WorkDto work, IReadOnlyList<InstaUser> users, CancellationToken token)
+    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
+    public async Task SaveAfterContinuedAsync(int id)
+    {
+        var work = await _workService.GetAsync(id);
+        if (work == null) return;
+        work.IsCompleted = true;
+        await _workNotifier.NotifyEndAsync(work);
+        await _workService.UpdateAsync(work);
+    }
+
+
+    private async Task ProcessingAsync(WorkDto work, CancellationToken token)
     {
         var text = _messageParser.Split(work.Message!);
         var vocabularies = _messageParser.GetVocabularies(work.Message!);
         var instagrams = (await GetInstagramsAsync(work.Instagrams)).Select(dto => (dto, 0)).ToList();
 
         var rnd = new Random();
-        for (var i = 0; i < users.Count; i++)
+
+
+        int count = work.CountSuccess + work.CountErrors;
+        while (count < work.InstagramPks.Count)
         {
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(rnd.Next(work.LowerInterval, work.UpperInterval)), token);
-            }
-            catch (OperationCanceledException)
-            {
-                if (await _workService.IsCancelled(_mapper.Map<WorkLiteDto>(work))) break;
-                throw;
-            }
+            await Task.Delay(TimeSpan.FromSeconds(rnd.Next(work.LowerInterval, work.UpperInterval)), token);
 
             if (instagrams.Count == 0)
             {
                 work.ErrorMessage = "Из-за большого количества ошибок работа остановлена.";
                 await _workService.UpdateWithoutStatusAsync(work);
-                return;
+                break;
             }
 
-            var inst = instagrams[i % work.Instagrams.Count];
-            var result =
-                await _mailingService.SendMessageAsync(inst.dto, _messageParser.Generate(text, vocabularies), users[i]);
-            HandleResult(result, work, inst);
-            await _workService.UpdateWithoutStatusAsync(work);
-            if (inst.Item2 == 5)
+            var pks = work.InstagramPks.Skip(count).Take(instagrams.Count).ToList();
+            count += pks.Count;
+            for (int i = 0; i < pks.Count; i++)
             {
-                instagrams.Remove(inst);
+                var result = await _mailingService.SendMessageAsync(instagrams[i].dto,
+                    _messageParser.Generate(text, vocabularies), pks[i]);
+                HandleResult(result, work, instagrams[i]);
+                await _workService.UpdateWithoutStatusAsync(work);
             }
+
+            instagrams.RemoveAll(inst => inst.Item2 == 5);
         }
     }
 
@@ -116,7 +119,7 @@ public class BackgroundJobService : IBackgroundJobService
         return list;
     }
 
-    private void HandleResult(IOperationResult result, WorkDto work, (InstagramDto, int) inst)
+    private static void HandleResult(IOperationResult result, WorkDto work, (InstagramDto, int) inst)
     {
         if (!result.Succeeded)
         {
@@ -129,15 +132,5 @@ public class BackgroundJobService : IBackgroundJobService
             inst.Item2 = 0;
             work.CountSuccess++;
         }
-    }
-
-    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    public async Task SaveAfterContinuedAsync(int id)
-    {
-        var work = await _workService.GetAsync(id);
-        if (work == null) return;
-        work.IsCompleted = true;
-        work.IsSucceeded = string.IsNullOrEmpty(work.ErrorMessage) || work.CountSuccess != 0;
-        await Task.WhenAll(_workNotifier.NotifyEndAsync(work), _workService.UpdateAsync(work));
     }
 }

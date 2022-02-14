@@ -2,14 +2,13 @@ using System.Globalization;
 using System.Net;
 using CsvHelper;
 using CsvHelper.Configuration;
-using DirectBot.BLL.Mapper;
-using DirectBot.Core.DTO;
 using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;
 using InstagramApiSharp;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
+using InstagramApiSharp.Logger;
 using InstagramApiSharp.WebApi;
 using InstagramApiSharp.WebApi.Enums;
 
@@ -29,12 +28,12 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         _instagramService = instagramService;
     }
 
-    public async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersAsync(WorkDto workDto, CancellationToken token)
+    public async Task<Core.Interfaces.IResult<List<long>>> GetUsersAsync(WorkDto workDto, CancellationToken token)
     {
-        if (!workDto.Instagrams.Any()) return Result<List<InstaUser>>.Fail("Не удалось загрузить инстаграмы.");
+        if (!workDto.Instagrams.Any()) return Result<List<long>>.Fail("Не удалось загрузить инстаграмы.");
         var instagram = await GetRandomInstagramAsync(workDto);
         if (instagram is not {IsActive: true})
-            return Result<List<InstaUser>>.Fail("Не удалось получить инстаграм, выбранный для загрузки.");
+            return Result<List<long>>.Fail("Не удалось получить инстаграм, выбранный для загрузки.");
         var api = await BuildApiAsync(instagram);
         return workDto.Type switch
         {
@@ -42,7 +41,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             WorkType.Subscribers => await GetUsersFromFollowersAsync(api, workDto.CountUsers, token),
             WorkType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, workDto.CountUsers, token),
             WorkType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, workDto.CountUsers, token),
-            _ => Result<List<InstaUser>>.Fail("Неизвестный тип работы.")
+            _ => Result<List<long>>.Fail("Неизвестный тип работы.")
         };
     }
 
@@ -63,7 +62,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         }
 
         var builder =
-            InstaApiBuilder.CreateBuilder(); //.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
+            InstaApiBuilder.CreateBuilder();
+        builder.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
@@ -86,9 +86,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         return instaApi;
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowingAsync(IInstaApi api,
-        int count,
-        CancellationToken token)
+    private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromFollowingAsync(IInstaApi api,
+        int count, CancellationToken token)
     {
         double pageD = count / 50.0;
         int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
@@ -96,15 +95,12 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             countPerPage,
             PaginationParameters.MaxPagesToLoad(pageCount), token);
         return result.Succeeded
-            ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
-                .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
-                .ToList())
-            : Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
+            ? Result<List<long>>.Ok(result.Value.Select(s => s.Pk).Take(count).ToList())
+            : Result<List<long>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFollowersAsync(IInstaApi api,
-        int count,
-        CancellationToken token)
+    private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromFollowersAsync(IInstaApi api,
+        int count, CancellationToken token)
     {
         double pageD = count / 50.0;
         int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
@@ -112,33 +108,30 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             countPerPage,
             PaginationParameters.MaxPagesToLoad(pageCount), token);
         return result.Succeeded
-            ? Result<List<InstaUser>>.Ok(result.Value.Take(count)
-                .Select(u => new InstaUser {Pk = u.Pk, Username = u.UserName})
-                .ToList())
-            : Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
+            ? Result<List<long>>.Ok(result.Value.Select(s => s.Pk).Take(count).ToList())
+            : Result<List<long>>.Fail($"{api.GetLoggedUser().UserName}: {result.Info.Message}");
     }
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromHashtagAsync(IInstaApi api,
+    private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromHashtagAsync(IInstaApi api,
         string hashtag,
         int count, CancellationToken token)
     {
         var pageCount = (int) Math.Ceiling(count / 30.0);
         var resultRecent =
-            await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount),
-                token);
+            await api.GetRecentHashtagMediaListAsync(hashtag, PaginationParameters.MaxPagesToLoad(pageCount), token);
         var x = !resultRecent.Succeeded
-            ? Result<List<InstaUser>>.Fail($"{api.GetLoggedUser().UserName}: {resultRecent.Info.Message}")
-            : Result<List<InstaUser>>.Ok(resultRecent.Value.Medias.DistinctBy(media => media.User.Pk).Take(count)
-                .Select(u => new InstaUser {Pk = u.User.Pk, Username = u.User.UserName}).ToList());
+            ? Result<List<long>>.Fail($"{api.GetLoggedUser().UserName}: {resultRecent.Info.Message}")
+            : Result<List<long>>.Ok(resultRecent.Value.Medias.Select(media => media.User.Pk).Distinct().Take(count)
+                .ToList());
         return x;
     }
 
 
-    private async Task<Core.Interfaces.IResult<List<InstaUser>>> GetUsersFromFileAsync(IInstaApi api, string fileId,
+    private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromFileAsync(IInstaApi api, string fileId,
         int count, CancellationToken token)
     {
         var result = await _fileDownloader.DownloadFileAsync(fileId, token);
-        if (!result.Succeeded) return Result<List<InstaUser>>.Fail($"Не удалось получить файл: {result.Value}");
+        if (!result.Succeeded) return Result<List<long>>.Fail($"Не удалось получить файл: {result.Value}");
 
         await using var stream = result.Value!;
         var config = new CsvConfiguration(CultureInfo.GetCultureInfoByIetfLanguageTag("Ru"))
@@ -160,12 +153,27 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             }
 
             return !records.Any()
-                ? Result<List<InstaUser>>.Fail("Не удалось загрузить пользователей из файла")
-                : Result<List<InstaUser>>.Ok(records.DistinctBy(record => record.Pk).ToList());
+                ? Result<List<long>>.Fail("Не удалось загрузить пользователей из файла")
+                : Result<List<long>>.Ok(records.Select(record => record.Pk).Distinct().ToList());
         }
         catch (Exception ex)
         {
-            return Result<List<InstaUser>>.Fail($"Ошибка при разборе файла: {ex.Message}");
+            return Result<List<long>>.Fail($"Ошибка при разборе файла: {ex.Message}");
+        }
+    }
+
+    private class InstaUser
+    {
+        public long Pk { get; set; }
+        public string? Username { get; set; }
+    }
+
+    private sealed class InstaUserMapper : ClassMap<InstaUser>
+    {
+        public InstaUserMapper()
+        {
+            Map(m => m.Pk).Name("Pk").Default(0);
+            Map(m => m.Username).Name("Username");
         }
     }
 }

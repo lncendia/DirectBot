@@ -43,10 +43,10 @@ public class MappingProfile : Profile
 
 
         CreateMap<WorkDto, Work>()
-            .ForMember(x => x.UserId,
-                expression => expression.MapFrom((dto, _) => dto.User?.Id))
-            .ForMember(x => x.Instagrams, expression => expression.Ignore())
-            .ForMember(x => x.User, expression => expression.Ignore());
+            // .ForMember(x => x.UserId,
+            //     expression => expression.MapFrom((dto, _) => dto.User?.Id))
+            .ForMember(x => x.Instagrams, expression => expression.Ignore());
+            // .ForMember(x => x.User, expression => expression.Ignore());
         CreateMap<Work, WorkDto>();
         CreateMap<Work, WorkLiteDto>();
 

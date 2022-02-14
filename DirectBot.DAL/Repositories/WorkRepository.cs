@@ -36,14 +36,14 @@ public class WorkRepository : IWorkRepository
     }
 
     public Task<WorkDto?> GetAsync(int id) =>
-        _context.Works.Include(work => work.User).Include(work => work.Instagrams)
-            .ThenInclude(instagram => instagram.Proxy)
-            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(work => work.Id == id);
+        _context.Works.ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(work => work.Id == id);
 
-    public async Task UpdateWithoutStatusAsync(WorkDto entity)
+    public async Task UpdateProcessingInfoAsync(WorkDto entity)
     {
         var u = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(entity);
         var entry = _context.Entry(u);
+        entry.Property(w => w.JobId).IsModified = false;
+        entry.Property(w => w.StartTime).IsModified = false;
         entry.Property(w => w.IsCompleted).IsModified = false;
         entry.Property(w => w.IsSucceeded).IsModified = false;
         entry.Property(w => w.IsCanceled).IsModified = false;
@@ -51,7 +51,7 @@ public class WorkRepository : IWorkRepository
     }
 
     public Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page) =>
-        _context.Works.Where(work => work.User.Id == userDto.Id).Include(work => work.Instagrams)
+        _context.Works.Where(work => work.Instagrams.Any(instagram => instagram.User.Id == userDto.Id))
             .OrderByDescending(work => work.Id).Skip(page - 1)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
@@ -64,9 +64,16 @@ public class WorkRepository : IWorkRepository
 
     public async Task AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto)
     {
-        var work = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(workDto);
-        var instagram = await _context.Instagrams.Persist(_mapper).InsertOrUpdateAsync(instagramDto);
+        var work = await _context.Works.FirstOrDefaultAsync(work1 => work1.Id == workDto.Id);
+        var instagram = await _context.Instagrams.FirstOrDefaultAsync(instagram1 => instagram1.Id == instagramDto.Id);
+        if (work == null || instagram == null) throw new ArgumentException("Не удалось найти указанные сущности");
         work.Instagrams.Add(instagram);
         await _context.SaveChangesAsync();
+    }
+
+    public Task<List<WorkDto>> GetExpiredSubscribes()
+    {
+        return _context.Works.Where(work => DateTime.Now.AddDays(-15) >= work.StartTime)
+            .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 }

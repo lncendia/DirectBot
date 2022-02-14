@@ -6,5 +6,5 @@ namespace DirectBot.Core.Services;
 
 public interface IInstagramUsersGetterService
 {
-     Task<IResult<List<InstaUser>>> GetUsersAsync(WorkDto workDto, CancellationToken token);
+     Task<IResult<List<long>>> GetUsersAsync(WorkDto workDto, CancellationToken token);
 }

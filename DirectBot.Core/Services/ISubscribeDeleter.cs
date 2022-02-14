@@ -3,9 +3,9 @@ using DirectBot.Core.Models;
 
 namespace DirectBot.Core.Services;
 
-public interface ISubscribeNotifier
+public interface ISubscribeDeleter
 {
-    Task NotifyStartAsync();
+    Task StartDeleteAsync();
     void Trigger();
     
 }

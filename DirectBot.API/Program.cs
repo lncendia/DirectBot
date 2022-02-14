@@ -3,6 +3,7 @@ using AutoMapper.EquivalencyExpression;
 using AutoMapper.Extensions.ExpressionMapping;
 using DirectBot.API.Mapper;
 using DirectBot.BLL.HangfireAuthorization;
+using DirectBot.BLL.Mapper;
 using DirectBot.BLL.Services;
 using DirectBot.Core.Configuration;
 using DirectBot.Core.Repositories;
@@ -17,6 +18,7 @@ using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
+
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews().AddNewtonsoftJson();
@@ -24,10 +26,11 @@ builder.Services.AddControllersWithViews().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 28)),
-        optionsBuilder => optionsBuilder.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
-    options.EnableSensitiveDataLogging();
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), optionsBuilder =>
+    {
+        optionsBuilder.EnableRetryOnFailure(1);
+        optionsBuilder.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+    });
 });
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IInstagramRepository, InstagramRepository>();
@@ -53,7 +56,8 @@ builder.Services.AddScoped<IMailingService, MailingService>();
 builder.Services.AddScoped<IFileDownloader, FileDownloader>();
 builder.Services.AddScoped<IWorkNotifier, WorkNotifier>();
 builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
-builder.Services.AddScoped<ISubscribeNotifier, SubscribeNotifier>();
+builder.Services.AddScoped<ISubscribeDeleter, SubscribeDeleter>();
+builder.Services.AddScoped<IWorkDeleter, WorkDeleter>();
 builder.Services.AddScoped<IMessageParser, MessageParser>();
 builder.Services.AddScoped<IProxyParser, ProxyParser>();
 
@@ -69,6 +73,7 @@ builder.Services.AddAutoMapper((mc, automapper) =>
 {
     automapper.AddProfile(new DirectBot.DAL.Mapper.MappingProfile());
     automapper.AddProfile(new MappingProfile());
+    automapper.AddProfile(new ToLiteMapper());
     automapper.AddCollectionMappers();
     automapper.UseEntityFrameworkCoreModel<ApplicationDbContext>(mc);
     automapper.AddExpressionMapping();
@@ -77,19 +82,24 @@ builder.Services.AddAutoMapper((mc, automapper) =>
 
 builder.Services.AddHangfire((_, configuration) =>
 {
-    configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("Hangfire2"), new SqlServerStorageOptions
-    {
-        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-        QueuePollInterval = TimeSpan.Zero,
-        UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true // Migration to Schema 7 is required
-    });
+    configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("Hangfire2"),
+        new SqlServerStorageOptions
+        {
+            CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+            SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+            QueuePollInterval = TimeSpan.Zero,
+            UseRecommendedIsolationLevel = true,
+            DisableGlobalLocks = true // Migration to Schema 7 is required
+        });
 
     configuration.UseSerializerSettings(new JsonSerializerSettings
         {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
     RecurringJob.AddOrUpdate("subscribesChecker",
-        () => _.CreateScope().ServiceProvider.GetService<ISubscribeNotifier>()!.NotifyStartAsync(),
+        () => _.CreateScope().ServiceProvider.GetService<ISubscribeDeleter>()!.StartDeleteAsync(),
+        Cron.Daily);
+
+    RecurringJob.AddOrUpdate("worksChecker",
+        () => _.CreateScope().ServiceProvider.GetService<IWorkDeleter>()!.StartDeleteAsync(),
         Cron.Daily);
 });
 builder.Services.AddHangfireServer();

@@ -21,5 +21,4 @@ public class User
     public List<Subscribe> Subscribes { get; set; } = new();
     public List<Instagram>? Instagrams { get; set; } = new();
     public List<Payment>? Payments { get; set; } = new();
-    public List<Work>? Works { get; set; } = new();
 }

@@ -31,7 +31,7 @@ public class MappingProfile : Profile
         CreateMap<SubscribeDto, AddSubscribeViewModel>().ForMember(x => x.UserId,
             expression => expression.MapFrom((dto, _) => dto.User?.Id));
         CreateMap<AddSubscribeViewModel, SubscribeDto>().ForMember(x => x.User,
-            expression => expression.MapFrom((dto, _) => new UserDto {Id = dto.UserId}));
+            expression => expression.MapFrom((dto, _) => new UserLiteDto {Id = dto.UserId}));
 
 
         CreateMap<UserSearchQuery, UserSearchViewModel>().ReverseMap();

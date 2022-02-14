@@ -17,7 +17,7 @@ public static class MainKeyboard
 
 
     public static InlineKeyboardMarkup Back(string query) =>
-        new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("🔙 Назад", $"back_{query}"));
+        new(InlineKeyboardButton.WithCallbackData("🔙 Назад", $"back_{query}"));
 
     public static readonly InlineKeyboardMarkup Main =
         new(InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu"));

@@ -19,7 +19,7 @@ public class StopWorkQueryCommand : ICallbackQueryCommand
 
         var id = int.Parse(query.Data![9..]);
         var work = await serviceContainer.WorkService.GetAsync(id);
-        if (work?.User == null || work.User.Id != user.Id)
+        if (work == null)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 "Вы не можете остановить эту работу.");

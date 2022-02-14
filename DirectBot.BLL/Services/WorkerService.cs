@@ -23,9 +23,14 @@ public class WorkerService : IWorkerService
         if (work.IsCompleted)
             return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не может быть запущена"));
 
-        work.JobId = BackgroundJob.Enqueue(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None));
+
+        work.JobId =
+            BackgroundJob.Enqueue(() => _backgroundJobService.ProcessingAsync(work.Id, CancellationToken.None));
+
         BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
             JobContinuationOptions.OnAnyFinishedState);
+
+
         work.StartTime = DateTime.Now;
         return _workService.UpdateAsync(work);
     }
@@ -37,9 +42,11 @@ public class WorkerService : IWorkerService
         if (work.IsCompleted)
             return Task.FromResult((IOperationResult) OperationResult.Fail("Работа не может быть запущена"));
         work.JobId =
-            BackgroundJob.Schedule(() => _backgroundJobService.RunAsync(work.Id, CancellationToken.None), offset);
+            BackgroundJob.Schedule(() => _backgroundJobService.ProcessingAsync(work.Id, CancellationToken.None),
+                offset);
         BackgroundJob.ContinueJobWith(work.JobId, () => _backgroundJobService.SaveAfterContinuedAsync(work.Id),
             JobContinuationOptions.OnAnyFinishedState);
+
         work.StartTime = offset.DateTime;
         return _workService.UpdateAsync(work);
     }
@@ -50,7 +57,7 @@ public class WorkerService : IWorkerService
             return Task.FromResult((IOperationResult) OperationResult.Fail("JobId in null"));
         var result = BackgroundJob.Delete(work.JobId);
         if (!result) OperationResult.Fail("Failed to stop work");
-        work.IsCanceled = true;
+        // work.IsCanceled = true; //TODO :cancel
         return _workService.UpdateAsync(work);
     }
 }

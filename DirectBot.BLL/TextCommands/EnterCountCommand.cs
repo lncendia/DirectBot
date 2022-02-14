@@ -13,7 +13,7 @@ public class EnterCountCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-                var work = user!.CurrentWork == null
+        var work = user!.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)

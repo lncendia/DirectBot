@@ -6,5 +6,5 @@ namespace DirectBot.Core.Services;
 
 public interface IMailingService
 {
-    Task<IOperationResult> SendMessageAsync(InstagramDto instagram, string message, InstaUser instaUser);
+    Task<IOperationResult> SendMessageAsync(InstagramDto instagram, string message, long instaUserPk);
 }

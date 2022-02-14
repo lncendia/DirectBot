@@ -33,10 +33,7 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var work = new WorkDto
-        {
-            User = user
-        };
+        var work = new WorkDto();
         var result = await serviceContainer.WorkService.AddAsync(work);
         if (!result.Succeeded)
         {
@@ -44,7 +41,7 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user.CurrentWork = new WorkLiteDto {Id = work.Id};
+        user.CurrentWork = serviceContainer.Mapper.Map<WorkLiteDto>(work);
         user.State = State.SelectAccounts;
         await serviceContainer.UserService.UpdateAsync(user);
 

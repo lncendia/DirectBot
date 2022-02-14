@@ -5,8 +5,6 @@ namespace DirectBot.DAL.Models;
 public class Work
 {
     public int Id { get; set; }
-    public long UserId { get; set; }
-    public User User { get; set; } = null!;
     public List<Instagram> Instagrams { get; set; } = new();
 
     public string? Message { get; set; }
@@ -18,7 +16,7 @@ public class Work
     public string? JobId { get; set; }
     public string? Hashtag { get; set; }
     public string? FileIdentifier { get; set; }
-
+    
     public List<long> InstagramPks { get; set; } = new();
     
     
