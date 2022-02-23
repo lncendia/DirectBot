@@ -35,12 +35,12 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
         if (instagram is not {IsActive: true})
             return Result<List<long>>.Fail("Не удалось получить инстаграм, выбранный для загрузки.");
         var api = await BuildApiAsync(instagram);
-        return workDto.Type switch
+        return workDto.UsersType switch
         {
-            WorkType.Subscriptions => await GetUsersFromFollowingAsync(api, workDto.CountUsers, token),
-            WorkType.Subscribers => await GetUsersFromFollowersAsync(api, workDto.CountUsers, token),
-            WorkType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, workDto.CountUsers, token),
-            WorkType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, workDto.CountUsers, token),
+            WorkUsersType.Subscriptions => await GetUsersFromFollowingAsync(api, workDto.CountUsers, token),
+            WorkUsersType.Subscribers => await GetUsersFromFollowersAsync(api, workDto.CountUsers, token),
+            WorkUsersType.Hashtag => await GetUsersFromHashtagAsync(api, workDto.Hashtag!, workDto.CountUsers, token),
+            WorkUsersType.File => await GetUsersFromFileAsync(api, workDto.FileIdentifier!, workDto.CountUsers, token),
             _ => Result<List<long>>.Fail("Неизвестный тип работы.")
         };
     }

@@ -2,19 +2,20 @@
 
 public enum State
 {
-    // Block,
     ChallengeRequired,
     ChallengeRequiredAccept,
     ChallengeRequiredPhoneCall,
     EnterCountToBuy,
     EnterInstagramData,
     EnterEditInstagramData,
-    SelectType,
+    SelectTypeUsers,
     EnterHashtag,
     EnterFile,
     EnterOffset,
     EnterMassage,
+    SelectTypeWork,
     EnterCountUsers,
+    EnterDivideData,
     EnterTwoFactorCode,
     MailingAdmin,
     Main,

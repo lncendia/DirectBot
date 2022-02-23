@@ -1,7 +1,7 @@
+using DirectBot.Core.Enums;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;
-using Hangfire;
 
 namespace DirectBot.BLL.Services;
 
@@ -26,13 +26,8 @@ public class BackgroundJobService : IBackgroundJobService
         _instagramService = instagramService;
     }
 
-
-    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
-    public async Task ProcessingAsync(int workId, CancellationToken token)
+    public async Task ProcessingMailingAsync(WorkDto work, CancellationToken token)
     {
-        var work = await _workService.GetAsync(workId);
-        if (work == null) return; //TODO: Cancel
-
         if (!work.Instagrams.All(dto => dto.IsActive) || !work.Instagrams.Any())
         {
             work.ErrorMessage = "Инстаграмы не активны.";
@@ -40,10 +35,10 @@ public class BackgroundJobService : IBackgroundJobService
             return;
         }
 
+        if (work.CountSuccess + work.CountErrors == 0) await _workNotifier.NotifyStartAsync(work);
 
         if (!work.InstagramPks.Any())
         {
-            await _workNotifier.NotifyStartAsync(work);
             var result = await _getterService.GetUsersAsync(work, token);
             if (result.Succeeded)
             {
@@ -57,15 +52,87 @@ public class BackgroundJobService : IBackgroundJobService
                 return;
             }
         }
-        
+
         await ProcessingAsync(work, token);
     }
 
-    [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
-    public async Task SaveAfterContinuedAsync(int id)
+    public async Task<List<WorkDto>> ProcessingDivideWorkAsync(WorkDto work, CancellationToken token)
     {
-        var work = await _workService.GetAsync(id);
-        if (work == null) return;
+        if (!work.InstagramPks.Any())
+        {
+            await _workNotifier.NotifyStartAsync(work);
+            var result = await _getterService.GetUsersAsync(work, token);
+            if (result.Succeeded)
+            {
+                work.InstagramPks = result.Value!;
+                await _workService.UpdateWithoutStatusAsync(work);
+            }
+            else
+            {
+                work.ErrorMessage = result.ErrorMessage;
+                await _workService.UpdateWithoutStatusAsync(work);
+                return new List<WorkDto>();
+            }
+        }
+
+        var count = work.InstagramPks.Count / work.CountPerDivision;
+        var countRest = work.InstagramPks.Count % work.CountPerDivision;
+        var workDtos = new List<WorkDto>();
+        for (var i = 0; i < count; i++)
+        {
+            var workDto = new WorkDto
+            {
+                InstagramPks = work.InstagramPks.Skip(i * work.CountPerDivision).Take(work.CountPerDivision).ToList()
+            };
+
+            var result = await CopyAndSaveAsync(work, workDto);
+            if (!result.Succeeded)
+            {
+                work.ErrorMessage = result.ErrorMessage;
+                await _workService.UpdateWithoutStatusAsync(work);
+                continue;
+            }
+
+            workDtos.Add(workDto);
+        }
+
+        if (countRest != 0)
+        {
+            var workDto = new WorkDto
+            {
+                InstagramPks = work.InstagramPks.Skip(count * work.CountPerDivision).Take(countRest).ToList()
+            };
+
+            var result = await CopyAndSaveAsync(work, workDto);
+            if (!result.Succeeded)
+            {
+                work.ErrorMessage = result.ErrorMessage;
+                await _workService.UpdateWithoutStatusAsync(work);
+            }
+            else
+                workDtos.Add(workDto);
+        }
+
+        return workDtos;
+    }
+
+    private async Task<IOperationResult> CopyAndSaveAsync(WorkDto source, WorkDto destination)
+    {
+        destination.Message = source.Message;
+        destination.LowerInterval = source.LowerInterval;
+        destination.UpperInterval = source.UpperInterval;
+        destination.UsersType = source.UsersType;
+        destination.Hashtag = source.Hashtag;
+        destination.FileIdentifier = source.FileIdentifier;
+        destination.Type = WorkType.Simple;
+        destination.CountUsers = source.CountPerDivision;
+        destination.Instagrams = source.Instagrams.ToList();
+        var result = await _workService.AddAsync(destination);
+        return !result.Succeeded ? result : OperationResult.Ok();
+    }
+
+    public async Task SaveAfterContinuedAsync(WorkDto work)
+    {
         work.IsCompleted = true;
         await _workNotifier.NotifyEndAsync(work);
         await _workService.UpdateAsync(work);
@@ -78,9 +145,8 @@ public class BackgroundJobService : IBackgroundJobService
         var vocabularies = _messageParser.GetVocabularies(work.Message!);
         var instagrams = (await GetInstagramsAsync(work.Instagrams)).Select(dto => (dto, 0)).ToList();
 
+
         var rnd = new Random();
-
-
         int count = work.CountSuccess + work.CountErrors;
         while (count < work.InstagramPks.Count)
         {

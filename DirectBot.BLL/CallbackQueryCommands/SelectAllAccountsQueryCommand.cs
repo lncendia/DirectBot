@@ -12,15 +12,14 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var userLite = serviceContainer.Mapper.Map<UserLiteDto>(user);
-        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(userLite);
+        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user!.Id);
         if (subscribesCount == 0)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "У вас нет подписок.");
             return;
         }
 
-        var work = user!.CurrentWork == null
+        var work = user.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
@@ -30,7 +29,7 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
         }
 
         var instagrams =
-            (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(userLite))
+            (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user.Id))
             .Where(dto => work.Instagrams.All(workDto => workDto.Id != dto.Id))
             .Take(subscribesCount - work.Instagrams.Count).ToList();
         if (instagrams.Count == 0)
@@ -39,13 +38,14 @@ public class SelectAllAccountsQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        foreach (var instagram in instagrams)
+        work.Instagrams.AddRange(instagrams);
+        var result = await serviceContainer.WorkService.UpdateAsync(work);
+
+
+        if (!result.Succeeded)
         {
-            var result =
-                await serviceContainer.WorkService.AddInstagramToWork(new WorkLiteDto {Id = work.Id}, instagram);
-            if (result.Succeeded) continue;
             await client.AnswerCallbackQueryAsync(query.Id,
-                $"Ошибка при добавлении инстаграма {instagram.Username}: {result.ErrorMessage}.");
+                $"Ошибка при добавлении аккаунтов: {result.ErrorMessage}.");
             return;
         }
 

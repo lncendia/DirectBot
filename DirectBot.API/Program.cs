@@ -1,9 +1,4 @@
-using AutoMapper;
-using AutoMapper.EquivalencyExpression;
-using AutoMapper.Extensions.ExpressionMapping;
-using DirectBot.API.Mapper;
 using DirectBot.BLL.HangfireAuthorization;
-using DirectBot.BLL.Mapper;
 using DirectBot.BLL.Services;
 using DirectBot.Core.Configuration;
 using DirectBot.Core.Repositories;
@@ -17,7 +12,6 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -69,27 +63,18 @@ builder.Services.AddScoped(sp => sp.GetService<IOptions<Configuration>>()!.Value
 builder.Services.AddHttpClient("tgwebhook").AddTypedClient<ITelegramBotClient>(httpClient
     => new TelegramBotClient(builder.Configuration["BotConfiguration:Token"], httpClient));
 
-builder.Services.AddAutoMapper((mc, automapper) =>
-{
-    automapper.AddProfile(new DirectBot.DAL.Mapper.MappingProfile());
-    automapper.AddProfile(new MappingProfile());
-    automapper.AddProfile(new ToLiteMapper());
-    automapper.AddCollectionMappers();
-    automapper.UseEntityFrameworkCoreModel<ApplicationDbContext>(mc);
-    automapper.AddExpressionMapping();
-}, typeof(ApplicationDbContext).Assembly);
-
 
 builder.Services.AddHangfire((_, configuration) =>
 {
-    configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("Hangfire2"),
+    configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("Hangfire"),
         new SqlServerStorageOptions
         {
             CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
             SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
             QueuePollInterval = TimeSpan.Zero,
             UseRecommendedIsolationLevel = true,
-            DisableGlobalLocks = true // Migration to Schema 7 is required
+            DisableGlobalLocks = true, // Migration to Schema 7 is required
+            PrepareSchemaIfNecessary = true
         });
 
     configuration.UseSerializerSettings(new JsonSerializerSettings

@@ -69,21 +69,43 @@ public static class WorkingKeyboard
         return new InlineKeyboardMarkup(list);
     }
 
-    public static readonly InlineKeyboardMarkup SelectType = new(
+    public static readonly InlineKeyboardMarkup SelectUserType = new(
         new List<List<InlineKeyboardButton>>
         {
-            new() {InlineKeyboardButton.WithCallbackData("1️⃣ Подписчики", $"type_{WorkType.Subscribers.ToString()}")},
-            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Подписки", $"type_{WorkType.Subscriptions.ToString()}")},
-            new() {InlineKeyboardButton.WithCallbackData("3️⃣ Хештег", $"type_{WorkType.Hashtag.ToString()}")},
-            new() {InlineKeyboardButton.WithCallbackData("4️⃣ Файл", $"type_{WorkType.File.ToString()}")},
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData("1️⃣ Подписчики",
+                    $"usersType_{WorkUsersType.Subscribers.ToString()}")
+            },
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData("2️⃣ Подписки",
+                    $"usersType_{WorkUsersType.Subscriptions.ToString()}")
+            },
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData("3️⃣ Хештег", $"usersType_{WorkUsersType.Hashtag.ToString()}")
+            },
+            new() {InlineKeyboardButton.WithCallbackData("4️⃣ Файл", $"usersType_{WorkUsersType.File.ToString()}")},
             new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
         });
 
-    public static readonly InlineKeyboardMarkup SelectTypeForManyAccount = new(
+    public static readonly InlineKeyboardMarkup SelectUserTypeForManyAccount = new(
         new List<List<InlineKeyboardButton>>
         {
-            new() {InlineKeyboardButton.WithCallbackData("1️⃣ Хештег", $"type_{WorkType.Hashtag.ToString()}")},
-            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Файл", $"type_{WorkType.File.ToString()}")},
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData("1️⃣ Хештег", $"usersType_{WorkUsersType.Hashtag.ToString()}")
+            },
+            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Файл", $"usersType_{WorkUsersType.File.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
+        });
+
+    public static readonly InlineKeyboardMarkup SelectTypeWork = new(
+        new List<List<InlineKeyboardButton>>
+        {
+            new() {InlineKeyboardButton.WithCallbackData("1️⃣ Обычная", $"workType_{WorkType.Simple.ToString()}")},
+            new() {InlineKeyboardButton.WithCallbackData("2️⃣ Разделить", $"workType_{WorkType.Divide.ToString()}")},
             new() {InlineKeyboardButton.WithCallbackData("⭐ В главное меню", "mainMenu")},
         });
 

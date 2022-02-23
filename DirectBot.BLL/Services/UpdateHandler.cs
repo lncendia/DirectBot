@@ -1,4 +1,3 @@
-using AutoMapper;
 using DirectBot.BLL.CallbackQueryCommands;
 using DirectBot.BLL.Interfaces;
 using DirectBot.BLL.TextCommands;
@@ -18,15 +17,15 @@ public class UpdateHandler : IUpdateHandler<Update>
 
     public UpdateHandler(IUserService userService, Core.Configuration.Configuration configuration,
         ITelegramBotClient botClient, ILogger<UpdateHandler> logger, IWorkerService workerService,
-        ISubscribeService subscribeService, IProxyService proxyService, IBillService billService,
+        ISubscribeService subscribeService, IBillService billService,
         IWorkService workService, IInstagramService instagramService,
-        IInstagramLoginService instagramLoginService, IPaymentService paymentService, IMapper mapper)
+        IInstagramLoginService instagramLoginService, IPaymentService paymentService)
     {
         _botClient = botClient;
         _logger = logger;
 
-        _serviceContainer = new ServiceContainer(userService, workerService, subscribeService, proxyService,
-            billService, instagramLoginService, instagramService, workService, paymentService, mapper, configuration);
+        _serviceContainer = new ServiceContainer(userService, workerService, subscribeService,
+            billService, instagramLoginService, instagramService, workService, paymentService, configuration);
     }
 
     private static readonly List<ITextCommand> TextCommands = new()
@@ -47,6 +46,7 @@ public class UpdateHandler : IUpdateHandler<Update>
         new EnterMessageCommand(),
         new EnterFileCommand(),
         new EnterHashtagCommand(),
+        new EnterDivideDataCommand(),
         new EnterCountCommand(),
         new AdminMailingCommand(),
         new AdminSubscribesCommand(),
@@ -75,7 +75,8 @@ public class UpdateHandler : IUpdateHandler<Update>
         new StartLaterQueryCommand(),
         new StartNowQueryCommand(),
         new StartWorkingQueryCommand(),
-        new SelectTypeQueryCommand(),
+        new SelectUsersTypeQueryCommand(),
+        new SelectWorkTypeQueryCommand(),
         new MyWorksQueryCommand(),
         new MyInstagramsQueryCommand(),
         new MyPaymentsQueryCommand(),

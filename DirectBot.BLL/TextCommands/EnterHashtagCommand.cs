@@ -13,9 +13,7 @@ public class EnterHashtagCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var work = user!.CurrentWork == null
-            ? null
-            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+        var work = user!.CurrentWork;
         if (work == null)
         {
             user.State = State.Main;
@@ -28,14 +26,10 @@ public class EnterHashtagCommand : ITextCommand
         var hashtag = message.Text!.Trim(' ');
         if (hashtag[0] == '#') hashtag = hashtag[1..];
         work.Hashtag = hashtag;
-        await serviceContainer.WorkService.UpdateAsync(work);
-
-        user!.State = State.EnterCountUsers;
+        user.State = State.SelectTypeWork;
         await serviceContainer.UserService.UpdateAsync(user);
-
-
-        await client.SendTextMessageAsync(message.Chat.Id,
-            "Введите число получателей. Должно быть не менее 1 и не более 500.", replyMarkup: MainKeyboard.Main);
+        await client.SendTextMessageAsync(message.Chat.Id, "Введите тип работы:",
+            replyMarkup: WorkingKeyboard.SelectTypeWork);
     }
 
     public bool Compare(Message message, UserDto? user)

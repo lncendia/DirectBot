@@ -13,29 +13,43 @@ public class EnterCountCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var work = user!.CurrentWork == null
-            ? null
-            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+        var work = user!.CurrentWork;
         if (work == null)
         {
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id, "У вас нет активных задач. Вы в главном меню.");
             return;
         }
 
-        if (!int.TryParse(message.Text!, out var count) || count is < 1 or > 500)
+        if (!int.TryParse(message.Text!, out var count) || count < 1)
         {
-            await client.SendTextMessageAsync(message.Chat.Id,
-                "Введены неверные данные. Количество получателей должно быть не менее 1 и не более 500. Попробуйте ещё раз.",
+            await client.SendTextMessageAsync(message.Chat.Id, "Введены неверные данные. Попробуйте ещё раз.",
                 replyMarkup: MainKeyboard.Main);
             return;
         }
 
-        work.CountUsers = count;
-        await serviceContainer.WorkService.UpdateAsync(work);
+        switch (work.Type)
+        {
+            case WorkType.Simple when count > 500:
+                await client.SendTextMessageAsync(message.Chat.Id,
+                    "Количество пользователей для данного типа работ должно быть не больше 500. Попробуйте ещё раз.",
+                    replyMarkup: MainKeyboard.Main);
+                return;
+            case WorkType.Divide when count > 1500:
+                await client.SendTextMessageAsync(message.Chat.Id,
+                    "Количество пользователей для данного типа работ должно быть не больше 1500. Попробуйте ещё раз.",
+                    replyMarkup: MainKeyboard.Main);
+                return;
+            case WorkType.Divide when count / work.CountPerDivision < 2:
+                await client.SendTextMessageAsync(message.Chat.Id,
+                    "Количество пользователей в подзадачах должно быть меньше не менее, чем в два раза. Попробуйте ещё раз.",
+                    replyMarkup: MainKeyboard.Main);
+                return;
+        }
 
-        user!.State = State.SelectTimeMode;
+        work.CountUsers = count;
+        user.State = State.SelectTimeMode;
         await serviceContainer.UserService.UpdateAsync(user);
 
 

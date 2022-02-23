@@ -13,9 +13,7 @@ public class EnterOffsetCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        var work = user!.CurrentWork == null
-            ? null
-            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+        var work = user!.CurrentWork;
         if (work == null)
         {
             user.State = State.Main;
@@ -43,17 +41,14 @@ public class EnterOffsetCommand : ITextCommand
 
         work.LowerInterval = lower;
         work.UpperInterval = upper;
-        await serviceContainer.WorkService.UpdateAsync(work);
-
-
-        user.State = State.SelectType;
+        user.State = State.SelectTypeUsers;
         await serviceContainer.UserService.UpdateAsync(user);
 
 
         await client.SendTextMessageAsync(message.Chat.Id, "Выберите тип:",
-            replyMarkup: work.Instagrams.Count > 1
-                ? WorkingKeyboard.SelectTypeForManyAccount
-                : WorkingKeyboard.SelectType);
+            replyMarkup: await serviceContainer.WorkService.GetInstagramsCountAsync(work.Id) > 1
+                ? WorkingKeyboard.SelectUserTypeForManyAccount
+                : WorkingKeyboard.SelectUserType);
     }
 
     public bool Compare(Message message, UserDto? user)

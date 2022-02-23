@@ -19,13 +19,13 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
         if (work == null)
         {
-            await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
+            await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                "Ошибка. Работа отсутсвтует.", replyMarkup: MainKeyboard.Main);
             return;
         }
 
         var subscribesCount =
-            await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(
-                serviceContainer.Mapper.Map<UserLiteDto>(user));
+            await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user.Id);
 
         if (instagram == null || instagram.User!.Id != user.Id || !instagram.IsActive ||
             work.Instagrams.Count >= subscribesCount || work.Instagrams.Any(dto => dto.Id == instagram.Id))
@@ -34,8 +34,8 @@ public class SelectAccountQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var result = await serviceContainer.WorkService.AddInstagramToWork(
-            serviceContainer.Mapper.Map<WorkLiteDto>(work), serviceContainer.Mapper.Map<InstagramLiteDto>(instagram));
+        work.Instagrams.Add(serviceContainer.Mapper.Map<InstagramLiteDto>(instagram));
+        var result = await serviceContainer.WorkService.UpdateAsync(work);
         if (!result.Succeeded)
         {
             await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");

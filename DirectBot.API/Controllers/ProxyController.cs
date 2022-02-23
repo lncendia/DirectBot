@@ -1,6 +1,8 @@
 using AutoMapper;
 using DirectBot.API.ViewModels.Proxy;
+using DirectBot.API.ViewModels.Subscribe;
 using DirectBot.Core.DTO;
+using DirectBot.Core.Models;
 using DirectBot.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +14,11 @@ public class ProxyController : Controller
     private readonly IProxyParser _proxyParser;
     private readonly IMapper _mapper;
 
-    public ProxyController(IProxyService proxyService, IProxyParser proxyParser, IMapper mapper)
+    public ProxyController(IProxyService proxyService, IProxyParser proxyParser)
     {
         _proxyService = proxyService;
         _proxyParser = proxyParser;
-        _mapper = mapper;
+        _mapper = GetMapper();
     }
 
     [HttpGet]
@@ -94,5 +96,13 @@ public class ProxyController : Controller
             {
                 message = $"Ошибка при удалении прокси: {result.ErrorMessage}."
             });
+    }
+    private IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.CreateMap<ProxyDto, ProxyViewModel>();
+            expr.CreateMap<ProxySearchViewModel, ProxySearchQuery>();
+        }));
     }
 }

@@ -1,4 +1,3 @@
-using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 
 namespace DirectBot.Core.Services;

@@ -22,7 +22,7 @@ public class StartNowQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var result = await serviceContainer.WorkerService.StartWorkAsync(work);
+        var result = await serviceContainer.WorkerService.StartWorkNowAsync(work);
         if (!result.Succeeded)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,

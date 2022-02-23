@@ -18,10 +18,9 @@ public class StartEnterAccountDataQueryCommand : ICallbackQueryCommand
             await client.AnswerCallbackQueryAsync(query.Id, "Вы должны быть в главное меню.");
             return;
         }
-        var userLite = serviceContainer.Mapper.Map<UserLiteDto>(user);
-
-        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsCountAsync(userLite);
-        var subscribes = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(userLite);
+        
+        var instagrams = await serviceContainer.InstagramService.GetUserInstagramsCountAsync(user.Id);
+        var subscribes = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user.Id);
         if (instagrams >= subscribes)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "У вас нет доступных подписок.");

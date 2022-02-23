@@ -36,14 +36,15 @@ public class EnterDateCommand : ITextCommand
             }
 
             user.CurrentWork = null;
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(user.Id, "Задачи успешно поставлены в очередь, вы в главном меню.");
         }
         else
         {
             await client.SendTextMessageAsync(message.From!.Id,
-                "Неверный формат времени! Попробуйте ещё раз.\nФормат: <code>[ЧЧ:мм]</code>", ParseMode.Html,
+                "Неверный формат времени! Попробуйте ещё раз.\nФормат: <code>[чч:мм:сс] или [Д.чч:мм:сс]</code>",
+                ParseMode.Html,
                 replyMarkup: MainKeyboard.Main);
         }
     }

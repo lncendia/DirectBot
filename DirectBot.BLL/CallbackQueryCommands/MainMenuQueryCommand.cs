@@ -15,6 +15,7 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
         var work = user!.CurrentWork == null
             ? null
             : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
+
         if (work != null)
         {
             var result = await serviceContainer.WorkService.DeleteAsync(work);
@@ -25,12 +26,12 @@ public class MainMenuQueryCommand : ICallbackQueryCommand
                 return;
             }
         }
+
         user.CurrentWork = null;
         user.CurrentInstagram = null;
         user.State = State.Main;
         await serviceContainer.UserService.UpdateAsync(user);
-        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-            "Вы в главном меню.");
+        await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, "Вы в главном меню.");
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)

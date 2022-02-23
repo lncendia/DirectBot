@@ -7,47 +7,43 @@ using Telegram.Bot.Types;
 
 namespace DirectBot.BLL.CallbackQueryCommands;
 
-public class SelectTypeQueryCommand : ICallbackQueryCommand
+public class SelectUsersTypeQueryCommand : ICallbackQueryCommand
 {
     public async Task Execute(ITelegramBotClient client, UserDto? user, CallbackQuery query,
         ServiceContainer serviceContainer)
     {
-        var type = (WorkType) Enum.Parse(typeof(WorkType), query.Data![5..]);
-        var work = user!.CurrentWork == null
-            ? null
-            : await serviceContainer.WorkService.GetAsync(user.CurrentWork.Id);
-        if (work?.Instagrams == null)
+        var type = (WorkUsersType) Enum.Parse(typeof(WorkUsersType), query.Data![10..]);
+        if (user!.CurrentWork == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Работа не выбрана. Попробуйте ещё раз.");
             return;
         }
 
-        work.Type = type;
-        await serviceContainer.WorkService.UpdateAsync(work);
+        user.CurrentWork.UsersType = type;
+        var count = await serviceContainer.WorkService.GetInstagramsCountAsync(user.CurrentWork.Id);
 
         switch (type)
         {
-            case WorkType.Subscriptions:
-            case WorkType.Subscribers:
-                if (work.Instagrams.Count > 1)
+            case WorkUsersType.Subscriptions:
+            case WorkUsersType.Subscribers:
+                if (count > 1)
                 {
                     await client.AnswerCallbackQueryAsync(query.Id,
                         "Работы такого типа можно запустить только с одним инстаграмом.");
                     return;
                 }
 
-                user.State = State.EnterCountUsers;
+                user.State = State.SelectTypeWork;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                    "Введите число получателей. Должно быть не менее 1 и не более 500.",
-                    replyMarkup: MainKeyboard.Main);
+                    "Введите тип работы:", replyMarkup: WorkingKeyboard.SelectTypeWork);
                 break;
-            case WorkType.Hashtag:
-                user!.State = State.EnterHashtag;
+            case WorkUsersType.Hashtag:
+                user.State = State.EnterHashtag;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                     "Введите хештег:", replyMarkup: MainKeyboard.Main);
                 break;
-            case WorkType.File:
-                user!.State = State.EnterFile;
+            case WorkUsersType.File:
+                user.State = State.EnterFile;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                     "Отправьте файл с Pk и/или Username пользователей в формате csv (первая ячейка - имя колонки):",
                     replyMarkup: MainKeyboard.Main);
@@ -61,6 +57,6 @@ public class SelectTypeQueryCommand : ICallbackQueryCommand
 
     public bool Compare(CallbackQuery query, UserDto? user)
     {
-        return query.Data!.StartsWith("type") && user!.State == State.SelectType;
+        return query.Data!.StartsWith("usersType") && user!.State == State.SelectTypeUsers;
     }
 }

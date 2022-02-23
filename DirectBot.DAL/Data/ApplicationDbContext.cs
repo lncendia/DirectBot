@@ -56,5 +56,7 @@ public class ApplicationDbContext : DbContext
                 (c1, c2) => c1!.SequenceEqual(c2!),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToList()));
+        modelBuilder.Entity<Work>().Property(work => work.IntervalPerDivision).HasConversion(s => s.Ticks,
+            s => TimeSpan.FromTicks(s));
     }
 }

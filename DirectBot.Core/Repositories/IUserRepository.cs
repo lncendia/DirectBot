@@ -7,6 +7,5 @@ namespace DirectBot.Core.Repositories;
 public interface IUserRepository : IRepository<UserDto, long>
 {
     Task<List<UserLiteDto>> GetAllAsync();
-    Task<int> GetCountAsync();
-    Task<List<UserDto>> GetUsersAsync(UserSearchQuery query);
+    Task<List<UserLiteDto>> GetUsersAsync(UserSearchQuery query);
 }

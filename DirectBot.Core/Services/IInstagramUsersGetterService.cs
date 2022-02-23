@@ -1,4 +1,3 @@
-using DirectBot.Core.DTO;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 

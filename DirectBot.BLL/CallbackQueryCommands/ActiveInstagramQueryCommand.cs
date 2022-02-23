@@ -29,7 +29,7 @@ public class ActiveInstagramQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user.CurrentInstagram = new InstagramLiteDto {Id = instagram.Id};
+        user.CurrentInstagram = serviceContainer.Mapper.Map<InstagramLiteDto>(instagram);
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.SendChatActionAsync(user.Id, ChatAction.Typing);

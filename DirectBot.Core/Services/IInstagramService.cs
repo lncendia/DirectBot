@@ -5,9 +5,8 @@ namespace DirectBot.Core.Services;
 
 public interface IInstagramService : IService<InstagramDto, int>
 {
-     Task<List<InstagramLiteDto>> GetAllAsync();
-     Task<List<InstagramLiteDto>> GetUserInstagramsAsync(UserLiteDto user);
-     Task<List<InstagramLiteDto>> GetUserActiveInstagramsAsync(UserLiteDto user);
-     Task<int> GetUserInstagramsCountAsync(UserLiteDto user);
-     Task<int> GetUserActiveInstagramsCountAsync(UserLiteDto user);
+     Task<List<InstagramLiteDto>> GetUserInstagramsAsync(long id);
+     Task<List<InstagramLiteDto>> GetUserActiveInstagramsAsync(long id);
+     Task<int> GetUserInstagramsCountAsync(long id);
+     Task<int> GetUserActiveInstagramsCountAsync(long id);
 }

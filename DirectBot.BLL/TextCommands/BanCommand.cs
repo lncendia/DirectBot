@@ -1,10 +1,7 @@
 ﻿using DirectBot.BLL.Interfaces;
-using DirectBot.BLL.Keyboards.UserKeyboard;
-using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.InputFiles;
 
 namespace DirectBot.BLL.TextCommands;
 

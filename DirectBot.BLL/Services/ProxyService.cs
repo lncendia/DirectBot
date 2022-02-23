@@ -27,8 +27,6 @@ public class ProxyService : IProxyService
         return await _instagramService.UpdateAsync(instagram);
     }
 
-    public Task<List<ProxyDto>> GetAllAsync() => _proxyRepository.GetAllAsync();
-
     public async Task<IOperationResult> DeleteAsync(ProxyDto entity)
     {
         try

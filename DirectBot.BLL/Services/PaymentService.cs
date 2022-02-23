@@ -40,9 +40,7 @@ public class PaymentService : IPaymentService
         }
     }
 
-    public Task<List<PaymentDto>> GetUserPaymentsAsync(UserLiteDto user, int page) => _paymentRepository.GetUserPaymentsAsync(user, page);
-
-    public Task<List<PaymentDto>> GetAllAsync() => _paymentRepository.GetAllAsync();
+    public Task<List<PaymentDto>> GetUserPaymentsAsync(long id, int page) => _paymentRepository.GetUserPaymentsAsync(id, page);
 
     public async Task<IOperationResult> DeleteAsync(PaymentDto payment)
     {

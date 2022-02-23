@@ -1,10 +1,11 @@
 using AutoMapper;
-using AutoMapper.EntityFrameworkCore;
+using AutoMapper.Extensions.ExpressionMapping;
 using AutoMapper.QueryableExtensions;
 using DirectBot.Core.DTO;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
+using DirectBot.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DirectBot.DAL.Repositories;
@@ -14,26 +15,22 @@ public class ProxyRepository : IProxyRepository
     private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
 
-    public ProxyRepository(ApplicationDbContext context, IMapper mapper)
+    public ProxyRepository(ApplicationDbContext context)
     {
         _context = context;
-        _mapper = mapper;
+        _mapper = GetMapper();
     }
-
-    public Task<List<ProxyDto>> GetAllAsync() =>
-        _context.Proxies.ProjectTo<ProxyDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(ProxyDto entity)
     {
-        var u = await _context.Proxies.Persist(_mapper).InsertOrUpdateAsync(entity);
+        var u = _mapper.Map<Proxy>(entity);
         await _context.SaveChangesAsync();
         entity.Id = u.Id;
     }
 
     public async Task DeleteAsync(ProxyDto entity)
     {
-        var proxy = await _context.Proxies.Persist(_mapper).InsertOrUpdateAsync(entity);
-        await _context.Entry(proxy).Collection(proxy1 => proxy1.Instagrams!).LoadAsync();
+        var proxy = _mapper.Map<Proxy>(entity);
         _context.Remove(proxy);
         await _context.SaveChangesAsync();
     }
@@ -62,7 +59,13 @@ public class ProxyRepository : IProxyRepository
             .ToListAsync();
     }
 
-    public Task<List<ProxyDto>> GetProxiesAsync(int page) =>
-        _context.Proxies.Skip((page - 1) * 30).Take(30).ProjectTo<ProxyDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
+
+    private IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.AddExpressionMapping();
+            expr.CreateMap<Proxy, ProxyDto>().ReverseMap();
+        }));
+    }
 }

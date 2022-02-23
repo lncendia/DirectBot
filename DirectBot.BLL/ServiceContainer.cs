@@ -1,5 +1,6 @@
 using AutoMapper;
 using DirectBot.Core.Configuration;
+using DirectBot.Core.Models;
 using DirectBot.Core.Services;
 
 namespace DirectBot.BLL;
@@ -18,8 +19,8 @@ public class ServiceContainer
     public readonly IMapper Mapper;
 
     public ServiceContainer(IUserService userService, IWorkerService workerService, ISubscribeService subscribeService,
-        IProxyService proxyService, IBillService billService, IInstagramLoginService instagramLoginService,
-        IInstagramService instagramService, IWorkService workService, IPaymentService paymentService, IMapper mapper,
+        IBillService billService, IInstagramLoginService instagramLoginService,
+        IInstagramService instagramService, IWorkService workService, IPaymentService paymentService,
         Configuration configuration)
     {
         UserService = userService;
@@ -31,6 +32,16 @@ public class ServiceContainer
         InstagramService = instagramService;
         WorkService = workService;
         PaymentService = paymentService;
-        Mapper = mapper;
+        Mapper = GetMapper();
+    }
+
+    private static IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.CreateMap<WorkDto, WorkLiteDto>();
+            expr.CreateMap<InstagramDto, InstagramLiteDto>();
+            expr.CreateMap<UserDto, UserLiteDto>();
+        }));
     }
 }

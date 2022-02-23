@@ -8,7 +8,6 @@ using DirectBot.Core.Services;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
 using InstagramApiSharp.Classes;
-using InstagramApiSharp.Logger;
 using Newtonsoft.Json;
 
 namespace DirectBot.BLL.Services;

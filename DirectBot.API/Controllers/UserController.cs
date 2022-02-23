@@ -10,14 +10,12 @@ namespace DirectBot.API.Controllers;
 public class UserController : Controller
 {
     private readonly IUserService _userService;
-    private readonly IInstagramService _instagramService;
     private readonly IMapper _mapper;
 
-    public UserController(IMapper mapper, IUserService userService, IInstagramService instagramService)
+    public UserController(IUserService userService)
     {
-        _mapper = mapper;
+        _mapper = GetMapper();
         _userService = userService;
-        _instagramService = instagramService;
     }
 
     [HttpGet]
@@ -52,8 +50,16 @@ public class UserController : Controller
     public async Task<IActionResult> Edit(UserViewModel userViewModel)
     {
         if (!ModelState.IsValid) return View(userViewModel);
-        var user = _mapper.Map<UserDto>(userViewModel);
-        var result = await _userService.UpdateAsync(user);
+        var userDto = await _userService.GetAsync(userViewModel.Id);
+        if (userDto == null)
+            return RedirectToAction("Index",
+                new
+                {
+                    message = "Пользователь не найден."
+                });
+        
+        _mapper.Map(userViewModel, userDto);
+        var result = await _userService.UpdateAsync(userDto);
 
         if (result.Succeeded)
         {
@@ -96,5 +102,15 @@ public class UserController : Controller
             {
                 message = $"Ошибка при удалении пользователя: {result.ErrorMessage}."
             });
+    }
+
+    private IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.CreateMap<UserLiteDto, UserViewModel>();
+            expr.CreateMap<UserViewModel, UserDto>().ReverseMap();
+            expr.CreateMap<UserSearchQuery, UserSearchViewModel>().ReverseMap();
+        }));
     }
 }

@@ -1,6 +1,4 @@
-﻿using DirectBot.Core.Models;
-
-namespace DirectBot.DAL.Models;
+﻿namespace DirectBot.DAL.Models;
 
 public class Instagram
 {

@@ -1,5 +1,3 @@
-using DirectBot.API.ViewModels.Proxy;
-
 namespace DirectBot.API.ViewModels.User;
 
 public class UserListViewModel

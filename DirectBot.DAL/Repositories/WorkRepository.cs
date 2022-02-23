@@ -1,9 +1,10 @@
 using AutoMapper;
-using AutoMapper.EntityFrameworkCore;
+using AutoMapper.Extensions.ExpressionMapping;
 using AutoMapper.QueryableExtensions;
 using DirectBot.Core.Models;
 using DirectBot.Core.Repositories;
 using DirectBot.DAL.Data;
+using DirectBot.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DirectBot.DAL.Repositories;
@@ -13,25 +14,23 @@ public class WorkRepository : IWorkRepository
     private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
 
-    public WorkRepository(ApplicationDbContext context, IMapper mapper)
+    public WorkRepository(ApplicationDbContext context)
     {
         _context = context;
-        _mapper = mapper;
+        _mapper = GetMapper();
     }
-
-    public Task<List<WorkLiteDto>> GetAllAsync() =>
-        _context.Works.ProjectTo<WorkLiteDto>(_mapper.ConfigurationProvider).ToListAsync();
 
     public async Task AddOrUpdateAsync(WorkDto entity)
     {
-        var u = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(entity);
+        var u = _mapper.Map<Work>(entity);
         await _context.SaveChangesAsync();
         entity.Id = u.Id;
     }
 
     public async Task DeleteAsync(WorkDto entity)
     {
-        await _context.Works.Persist(_mapper).RemoveAsync(entity);
+        var u = _mapper.Map<Work>(entity);
+        _context.Remove(u);
         await _context.SaveChangesAsync();
     }
 
@@ -40,40 +39,62 @@ public class WorkRepository : IWorkRepository
 
     public async Task UpdateProcessingInfoAsync(WorkDto entity)
     {
-        var u = await _context.Works.Persist(_mapper).InsertOrUpdateAsync(entity);
+        var u = _mapper.Map<Work>(entity);
         var entry = _context.Entry(u);
         entry.Property(w => w.JobId).IsModified = false;
         entry.Property(w => w.StartTime).IsModified = false;
         entry.Property(w => w.IsCompleted).IsModified = false;
-        entry.Property(w => w.IsSucceeded).IsModified = false;
-        entry.Property(w => w.IsCanceled).IsModified = false;
         await _context.SaveChangesAsync();
     }
 
-    public Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page) =>
-        _context.Works.Where(work => work.Instagrams.Any(instagram => instagram.User.Id == userDto.Id))
+    public Task<WorkDto?> GetUserWorksAsync(long id, int page) =>
+        _context.Works.Where(work => work.Instagrams.Any(instagram => instagram.User.Id == id))
             .OrderByDescending(work => work.Id).Skip(page - 1)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
 
-    public Task<bool> HasActiveWorksAsync(InstagramLiteDto instagram) =>
+    public Task<bool> HasActiveWorksAsync(int instagramId) =>
         _context.Works.AnyAsync(work =>
-            work.Instagrams.Any(instagram1 => instagram1.Id == instagram.Id) && !work.IsCompleted);
+            work.Instagrams.Any(instagram1 => instagram1.Id == instagramId) && !work.IsCompleted);
 
-    public Task<bool> IsCancelled(WorkLiteDto workDto) =>
-        _context.Works.Where(work => work.Id == workDto.Id).Select(work => work.IsCanceled).FirstOrDefaultAsync();
+    public Task<int> GetInstagramsCountAsync(int id) =>
+        _context.Works.Where(work => work.Id == id).Select(work => work.Instagrams.Count).FirstOrDefaultAsync();
 
-    public async Task AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto)
-    {
-        var work = await _context.Works.FirstOrDefaultAsync(work1 => work1.Id == workDto.Id);
-        var instagram = await _context.Instagrams.FirstOrDefaultAsync(instagram1 => instagram1.Id == instagramDto.Id);
-        if (work == null || instagram == null) throw new ArgumentException("Не удалось найти указанные сущности");
-        work.Instagrams.Add(instagram);
-        await _context.SaveChangesAsync();
-    }
 
-    public Task<List<WorkDto>> GetExpiredSubscribes()
+    public Task<List<WorkDto>> GetExpiredWorks()
     {
         return _context.Works.Where(work => DateTime.Now.AddDays(-15) >= work.StartTime)
             .ProjectTo<WorkDto>(_mapper.ConfigurationProvider).ToListAsync();
+    }
+
+    private IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.AddExpressionMapping();
+            expr.CreateMap<WorkDto, Work>()
+                .ConstructUsing((dto, _) =>
+                {
+                    if (dto.Id != 0)
+                        return _context.Works.Include(work => work.Instagrams).First(o => o.Id == dto.Id);
+
+                    var work = new Work();
+                    _context.Works.Add(work);
+                    return work;
+                });
+            expr.CreateMap<InstagramLiteDto, Instagram>()
+                .ConstructUsing((dto, _) =>
+                {
+                    if (dto.Id != 0)
+                        return _context.Instagrams.First(o => o.Id == dto.Id);
+
+                    var detail = new Instagram();
+                    _context.Instagrams.Add(detail);
+                    return detail;
+                });
+
+            expr.CreateMap<Work, WorkDto>();
+            expr.CreateMap<Work, WorkLiteDto>();
+            expr.CreateMap<Instagram, InstagramLiteDto>();
+        }));
     }
 }

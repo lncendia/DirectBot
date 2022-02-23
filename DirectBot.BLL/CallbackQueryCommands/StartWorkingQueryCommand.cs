@@ -18,14 +18,13 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var userLite = serviceContainer.Mapper.Map<UserLiteDto>(user);
-        if (await serviceContainer.InstagramService.GetUserActiveInstagramsCountAsync(userLite) == 0)
+        if (await serviceContainer.InstagramService.GetUserActiveInstagramsCountAsync(user.Id) == 0)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "У вас нет активированных аккаунтов.");
             return;
         }
 
-        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(userLite);
+        var subscribesCount = await serviceContainer.SubscribeService.GetUserSubscribesCountAsync(user.Id);
 
         if (subscribesCount == 0)
         {
@@ -33,23 +32,14 @@ public class StartWorkingQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var work = new WorkDto();
-        var result = await serviceContainer.WorkService.AddAsync(work);
-        if (!result.Succeeded)
-        {
-            await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");
-            return;
-        }
-
-        user.CurrentWork = serviceContainer.Mapper.Map<WorkLiteDto>(work);
+        user.CurrentWork = new WorkLiteDto();
         user.State = State.SelectAccounts;
         await serviceContainer.UserService.UpdateAsync(user);
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Выберите аккаунты:",
             replyMarkup: WorkingKeyboard.Select(
-                (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(userLite))
-                .Take(subscribesCount)));
+                (await serviceContainer.InstagramService.GetUserActiveInstagramsAsync(user.Id)).Take(subscribesCount)));
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)

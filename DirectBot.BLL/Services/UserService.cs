@@ -46,9 +46,7 @@ public class UserService : IUserService
     }
 
     public Task<IOperationResult> AddAsync(UserDto item) => UpdateAsync(item);
+    
 
-
-    public Task<int> GetCountAsync() => _userRepository.GetCountAsync();
-
-    public Task<List<UserDto>> GetUsersAsync(UserSearchQuery query) => _userRepository.GetUsersAsync(query);
+    public Task<List<UserLiteDto>> GetUsersAsync(UserSearchQuery query) => _userRepository.GetUsersAsync(query);
 }

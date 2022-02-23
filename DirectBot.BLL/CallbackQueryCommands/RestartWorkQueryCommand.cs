@@ -32,29 +32,30 @@ public class RestartWorkQueryCommand : ICallbackQueryCommand
             Message = work.Message,
             LowerInterval = work.LowerInterval,
             UpperInterval = work.UpperInterval,
+            UsersType = work.UsersType,
             Type = work.Type,
             Hashtag = work.Hashtag,
             FileIdentifier = work.FileIdentifier,
+            CountUsers = work.CountUsers,
+            CountPerDivision = work.CountPerDivision,
+            IntervalPerDivision = work.IntervalPerDivision,
+            Instagrams = work.Instagrams.ToList()
         };
 
         var result = await serviceContainer.WorkService.AddAsync(newWork);
         if (!result.Succeeded)
         {
-            await client.AnswerCallbackQueryAsync(query.Id,
-                $"Ошибка: {result.ErrorMessage}.");
+            await client.AnswerCallbackQueryAsync(query.Id, $"Ошибка: {result.ErrorMessage}.");
             return;
         }
 
-        foreach (var instagram in work.Instagrams)
-            await serviceContainer.WorkService.AddInstagramToWork(new WorkLiteDto {Id = newWork.Id}, instagram);
-
         user.CurrentWork = serviceContainer.Mapper.Map<WorkLiteDto>(newWork);
-        user.State = State.EnterCountUsers;
+        user.State = State.SelectTimeMode;
         await serviceContainer.UserService.UpdateAsync(user);
 
+
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-            "Введите число получателей. Должно быть не менее 1 и не более 500.",
-            replyMarkup: MainKeyboard.Main);
+            "Выберите действие:", replyMarkup: WorkingKeyboard.StartWork);
     }
 
     public bool Compare(CallbackQuery query, UserDto? user)

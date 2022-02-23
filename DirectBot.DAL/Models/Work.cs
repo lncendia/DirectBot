@@ -10,8 +10,12 @@ public class Work
     public string? Message { get; set; }
     public int UpperInterval { get; set; }
     public int LowerInterval { get; set; }
+    public WorkUsersType UsersType { get; set; }
     public WorkType Type { get; set; }
     public int CountUsers { get; set; }
+    
+    public int CountPerDivision { get; set; }
+    public TimeSpan IntervalPerDivision { get; set; }
 
     public string? JobId { get; set; }
     public string? Hashtag { get; set; }
@@ -24,8 +28,7 @@ public class Work
 
 
     public bool IsCompleted { get; set; }
-    public bool IsCanceled { get; set; }
-    public bool IsSucceeded { get; set; }
+    //public bool IsCanceled { get; set; }
     public string? ErrorMessage { get; set; }
 
 

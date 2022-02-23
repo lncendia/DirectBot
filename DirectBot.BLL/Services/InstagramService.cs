@@ -11,8 +11,6 @@ public class InstagramService : IInstagramService
 
     public InstagramService(IInstagramRepository instagramRepository) => _instagramRepository = instagramRepository;
 
-    public Task<List<InstagramLiteDto>> GetAllAsync() => _instagramRepository.GetAllAsync();
-
     public async Task<IOperationResult> DeleteAsync(InstagramDto entity)
     {
         try
@@ -44,22 +42,22 @@ public class InstagramService : IInstagramService
 
     public async Task<IOperationResult> AddAsync(InstagramDto item)
     {
-        var instagrams = await _instagramRepository.GetUserInstagramsAsync(item.User!);
+        var instagrams = await _instagramRepository.GetUserInstagramsAsync(item.Id);
         if (instagrams.Any(instagram => instagram.Username == item.Username))
             return OperationResult.Fail("Инстаграм с таким именем уже существуют");
         return await UpdateAsync(item);
     }
 
-    public Task<List<InstagramLiteDto>> GetUserInstagramsAsync(UserLiteDto user) =>
-        _instagramRepository.GetUserInstagramsAsync(user);
+    public Task<List<InstagramLiteDto>> GetUserInstagramsAsync(long id) =>
+        _instagramRepository.GetUserInstagramsAsync(id);
 
-    public Task<List<InstagramLiteDto>> GetUserActiveInstagramsAsync(UserLiteDto user) =>
-        _instagramRepository.GetUserInstagramsAsync(user, true);
-    
+    public Task<List<InstagramLiteDto>> GetUserActiveInstagramsAsync(long id) =>
+        _instagramRepository.GetUserInstagramsAsync(id, true);
 
-    public Task<int> GetUserInstagramsCountAsync(UserLiteDto user) =>
-        _instagramRepository.GetUserInstagramsCountAsync(user);
 
-    public Task<int> GetUserActiveInstagramsCountAsync(UserLiteDto user) =>
-        _instagramRepository.GetUserInstagramsCountAsync(user, true);
+    public Task<int> GetUserInstagramsCountAsync(long id) =>
+        _instagramRepository.GetUserInstagramsCountAsync(id);
+
+    public Task<int> GetUserActiveInstagramsCountAsync(long id) =>
+        _instagramRepository.GetUserInstagramsCountAsync(id, true);
 }

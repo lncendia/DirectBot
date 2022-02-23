@@ -45,7 +45,7 @@ public class EnterSubscribeDataCommand : ITextCommand
 
         var result = await serviceContainer.SubscribeService.AddAsync(new SubscribeDto
         {
-            User = new UserLiteDto {Id = user!.Id},
+            User = new UserLiteDto {Id = user2!.Id},
             EndSubscribe = date
         });
 

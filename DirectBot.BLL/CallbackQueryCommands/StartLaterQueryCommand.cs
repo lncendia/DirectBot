@@ -16,7 +16,7 @@ public class StartLaterQueryCommand : ICallbackQueryCommand
         user!.State = State.SetDate;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.SendTextMessageAsync(query.From.Id,
-            "Через сколько вы хотите начать работу? В формате: <code>[ЧЧ:мм]</code>", ParseMode.Html,
+            "Через сколько вы хотите начать работу? В формате: <code>[чч:мм:сс] или [Д.чч:мм:сс]</code>", ParseMode.Html,
             replyMarkup: MainKeyboard.Main);
     }
 

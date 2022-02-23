@@ -11,25 +11,12 @@ public class WorkService : IWorkService
 
     public WorkService(IWorkRepository workRepository) => _workRepository = workRepository;
 
-    public Task<WorkDto?> GetUserWorksAsync(UserLiteDto userDto, int page) =>
-        _workRepository.GetUserWorksAsync(userDto, page);
+    public Task<WorkDto?> GetUserWorksAsync(long id, int page) => _workRepository.GetUserWorksAsync(id, page);
 
-    public Task<bool> HasActiveWorksAsync(InstagramLiteDto instagram) => _workRepository.HasActiveWorksAsync(instagram);
-    public Task<bool> IsCancelled(WorkLiteDto workDto) => _workRepository.IsCancelled(workDto);
-    public async Task<IOperationResult> AddInstagramToWork(WorkLiteDto workDto, InstagramLiteDto instagramDto)
-    {
-        try
-        {
-            await _workRepository.AddInstagramToWork(workDto, instagramDto);
-            return OperationResult.Ok();
-        }
-        catch (Exception ex)
-        {
-            return OperationResult.Fail(ex.Message);
-        }
-    }
+    public Task<bool> HasActiveWorksAsync(int id) => _workRepository.HasActiveWorksAsync(id);
+    public Task<int> GetInstagramsCountAsync(int id) => _workRepository.GetInstagramsCountAsync(id);
 
-    public Task<List<WorkDto>> GetExpiredSubscribes() => _workRepository.GetExpiredSubscribes();
+    public Task<List<WorkDto>> GetExpiredSubscribes() => _workRepository.GetExpiredWorks();
 
     public Task<WorkDto?> GetAsync(int id) => _workRepository.GetAsync(id);
 
@@ -60,8 +47,6 @@ public class WorkService : IWorkService
     }
 
     public Task<IOperationResult> AddAsync(WorkDto item) => UpdateAsync(item);
-
-    public Task<List<WorkLiteDto>> GetAllAsync() => _workRepository.GetAllAsync();
 
     public async Task<IOperationResult> DeleteAsync(WorkDto work)
     {

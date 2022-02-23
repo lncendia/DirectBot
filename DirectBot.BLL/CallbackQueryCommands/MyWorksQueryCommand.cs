@@ -26,7 +26,7 @@ public class MyWorksQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        var work = await serviceContainer.WorkService.GetUserWorksAsync(serviceContainer.Mapper.Map<UserLiteDto>(user), page);
+        var work = await serviceContainer.WorkService.GetUserWorksAsync(user.Id, page);
         if (work == null)
         {
             await client.AnswerCallbackQueryAsync(query.Id, "Больше нет работ.");

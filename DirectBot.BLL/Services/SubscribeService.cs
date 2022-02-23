@@ -11,16 +11,16 @@ public class SubscribeService : ISubscribeService
     private readonly ISubscribeRepository _subscribeRepository;
     public SubscribeService(ISubscribeRepository subscribeRepository) => _subscribeRepository = subscribeRepository;
 
-    public Task<List<SubscribeDto>> GetUserSubscribesAsync(UserLiteDto user, int page) =>
-        _subscribeRepository.GetUserSubscribesAsync(user, page);
+    public Task<List<SubscribeDto>> GetUserSubscribesAsync(long userId, int page) =>
+        _subscribeRepository.GetUserSubscribesAsync(userId, page);
 
     public Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query) =>
         _subscribeRepository.GetSubscribesAsync(query);
 
     public Task<List<SubscribeDto>> GetExpiredSubscribes() => _subscribeRepository.GetExpiredSubscribes();
 
-    public Task<int> GetUserSubscribesCountAsync(UserLiteDto user) =>
-        _subscribeRepository.GetUserSubscribesCountAsync(user);
+    public Task<int> GetUserSubscribesCountAsync(long userId) =>
+        _subscribeRepository.GetUserSubscribesCountAsync(userId);
 
 
     public async Task<IOperationResult> DeleteAsync(SubscribeDto subscribe)
@@ -35,10 +35,7 @@ public class SubscribeService : ISubscribeService
             return OperationResult.Fail(ex.Message);
         }
     }
-
-    public Task<List<SubscribeDto>> GetAllAsync() => _subscribeRepository.GetAllAsync();
-
-
+    
     public Task<SubscribeDto?> GetAsync(int id) => _subscribeRepository.GetAsync(id);
 
     public async Task<IOperationResult> UpdateAsync(SubscribeDto entity)

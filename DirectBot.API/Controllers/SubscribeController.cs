@@ -10,14 +10,17 @@ namespace DirectBot.API.Controllers;
 public class SubscribeController : Controller
 {
     private readonly ISubscribeService _subscribeService;
-    private readonly ISubscribeDeleter _SubscribeDeleter;
+    private readonly IUserService _userService;
+    private readonly ISubscribeDeleter _subscribeDeleter;
     private readonly IMapper _mapper;
 
-    public SubscribeController(IMapper mapper, ISubscribeService subscribeService, ISubscribeDeleter SubscribeDeleter)
+    public SubscribeController(ISubscribeService subscribeService, ISubscribeDeleter subscribeDeleter,
+        IUserService userService)
     {
-        _mapper = mapper;
+        _mapper = GetMapper();
         _subscribeService = subscribeService;
-        _SubscribeDeleter = SubscribeDeleter;
+        _subscribeDeleter = subscribeDeleter;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -38,7 +41,7 @@ public class SubscribeController : Controller
     [HttpGet]
     public IActionResult TriggerCheck()
     {
-        _SubscribeDeleter.Trigger();
+        _subscribeDeleter.Trigger();
         return RedirectToAction("Index",
             new
             {
@@ -58,8 +61,15 @@ public class SubscribeController : Controller
     {
         if (!ModelState.IsValid)
             return View(model);
+        var user = await _userService.GetAsync(model.UserId);
+        if (user == null)
+            ModelState.AddModelError("", "Пользователь не найден");
 
-        var subscribe = _mapper.Map<SubscribeDto>(model);
+        var subscribe = new SubscribeDto
+        {
+            EndSubscribe = model.EndSubscribe,
+            User = _mapper.Map<UserLiteDto>(user)
+        };
         var result = await _subscribeService.AddAsync(subscribe);
         if (result.Succeeded)
             return RedirectToAction("Index",
@@ -96,5 +106,15 @@ public class SubscribeController : Controller
             {
                 message = $"Ошибка при удалении подписки: {result.ErrorMessage}."
             });
+    }
+
+    private IMapper GetMapper()
+    {
+        return new Mapper(new MapperConfiguration(expr =>
+        {
+            expr.CreateMap<SubscribeDto, SubscribeViewModel>();
+            expr.CreateMap<UserDto, UserLiteDto>();
+            expr.CreateMap<SubscribeSearchViewModel, SubscribeSearchQuery>();
+        }));
     }
 }
