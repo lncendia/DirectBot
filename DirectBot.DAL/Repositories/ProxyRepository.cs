@@ -65,7 +65,17 @@ public class ProxyRepository : IProxyRepository
         return new Mapper(new MapperConfiguration(expr =>
         {
             expr.AddExpressionMapping();
-            expr.CreateMap<Proxy, ProxyDto>().ReverseMap();
+            expr.CreateMap<ProxyDto, Proxy>()
+                .ConstructUsing((dto, _) =>
+                {
+                    if (dto.Id != 0)
+                        return _context.Proxies.First(o => o.Id == dto.Id);
+
+                    var proxy = new Proxy();
+                    _context.Proxies.Add(proxy);
+                    return proxy;
+                });
+            expr.CreateMap<Proxy, ProxyDto>();
         }));
     }
 }

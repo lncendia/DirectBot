@@ -40,4 +40,8 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="BotCommands" />
+    </ItemGroup>
+
 </Project>

@@ -1,4 +1,4 @@
-using DirectBot.BLL.Keyboards.UserKeyboard;
+using DirectBot.BLL.BotCommands.Keyboards.UserKeyboard;
 using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;

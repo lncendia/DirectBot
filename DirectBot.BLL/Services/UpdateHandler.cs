@@ -1,6 +1,6 @@
-using DirectBot.BLL.CallbackQueryCommands;
-using DirectBot.BLL.Interfaces;
-using DirectBot.BLL.TextCommands;
+using DirectBot.BLL.BotCommands.CallbackQueryCommands;
+using DirectBot.BLL.BotCommands.Interfaces;
+using DirectBot.BLL.BotCommands.TextCommands;
 using DirectBot.Core.Services;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -82,6 +82,7 @@ public class UpdateHandler : IUpdateHandler<Update>
         new MyPaymentsQueryCommand(),
         new MySubscribesQueryCommand(),
         new BuySubscribeQueryCommand(),
+        new SelectRestartModeQueryCommand(),
         new RestartWorkQueryCommand(),
         new EditInstagramQueryCommand(),
         new StopWorkQueryCommand()

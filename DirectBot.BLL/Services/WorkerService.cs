@@ -3,6 +3,7 @@ using DirectBot.Core.Interfaces;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;
 using Hangfire;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace DirectBot.BLL.Services;
@@ -58,13 +59,12 @@ public class WorkerService : IWorkerService
         return _workService.UpdateAsync(work);
     }
 
-    public Task<IOperationResult> CancelWorkAsync(WorkDto work)
+    public IOperationResult CancelWorkAsync(WorkDto work)
     {
-        if (string.IsNullOrEmpty(work.JobId))
-            return Task.FromResult((IOperationResult) OperationResult.Fail("JobId in null"));
+        if (string.IsNullOrEmpty(work.JobId)) return OperationResult.Fail("JobId in null");
         var result = BackgroundJob.Delete(work.JobId);
         if (!result) OperationResult.Fail("Failed to stop work");
-        return _workService.UpdateAsync(work);
+        return OperationResult.Ok();
     }
 
     [AutomaticRetry(Attempts = 1, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
@@ -80,8 +80,11 @@ public class WorkerService : IWorkerService
             {
                 work.CountErrors++;
                 work.ErrorMessage = result.ErrorMessage;
+                CancelWorkAsync(works[i]);
+                await _workService.DeleteAsync(works[i]);
             }
             else work.CountSuccess++;
+
             await _workService.UpdateWithoutStatusAsync(work);
         }
     }

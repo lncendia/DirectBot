@@ -61,9 +61,8 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
             instagram.Proxy = instagramDto.Proxy;
         }
 
-        var builder =
-            InstaApiBuilder.CreateBuilder();
-        builder.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
+        var builder = InstaApiBuilder.CreateBuilder();
+        //builder.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
