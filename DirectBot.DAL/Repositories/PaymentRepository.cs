@@ -61,12 +61,13 @@ public class PaymentRepository : IPaymentRepository
             expr.CreateMap<PaymentDto, Payment>()
                 .ConstructUsing((dto, _) =>
                 {
-                    if (string.IsNullOrEmpty(dto.Id))
-                        return _context.Payments.Include(payment => payment.User).First(o => o.Id == dto.Id);
+                    var payment = _context.Payments.Include(payment => payment.User)
+                        .FirstOrDefault(o => o.Id == dto.Id);
+                    if (payment != null) return payment;
+                    payment = new Payment {Id = dto.Id};
+                    _context.Payments.Add(payment);
 
-                    var detail = new Payment();
-                    _context.Payments.Add(detail);
-                    return detail;
+                    return payment;
                 });
 
             expr.CreateMap<User, UserLiteDto>();

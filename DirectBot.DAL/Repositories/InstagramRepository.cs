@@ -64,8 +64,7 @@ public class InstagramRepository : IInstagramRepository
             expr.CreateMap<UserLiteDto, User>()
                 .ConstructUsing((dto, _) =>
                 {
-                    if (dto.Id != 0)
-                        return _context.Users.First(o => o.Id == dto.Id);
+                    if (dto.Id != 0) return _context.Users.First(o => o.Id == dto.Id);
 
                     var user = new User();
                     _context.Users.Add(user);
@@ -74,8 +73,7 @@ public class InstagramRepository : IInstagramRepository
             expr.CreateMap<ProxyDto, Proxy>()
                 .ConstructUsing((dto, _) =>
                 {
-                    if (dto.Id != 0)
-                        return _context.Proxies.First(o => o.Id == dto.Id);
+                    if (dto.Id != 0) return _context.Proxies.First(o => o.Id == dto.Id);
 
                     var proxy = new Proxy();
                     _context.Add(proxy);

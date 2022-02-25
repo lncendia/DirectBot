@@ -70,11 +70,10 @@ public class UserRepository : IUserRepository
             expr.CreateMap<UserDto, User>()
                 .ConstructUsing((dto, _) =>
                 {
-                    if (dto.Id != 0)
-                        return _context.Users.Include(user => user.CurrentInstagram).Include(user => user.CurrentWork)
-                            .First(o => o.Id == dto.Id);
-
-                    var user = new User();
+                    var user = _context.Users.Include(user => user.CurrentInstagram).Include(user => user.CurrentWork)
+                        .FirstOrDefault(o => o.Id == dto.Id);
+                    if (user != null) return user;
+                    user = new User {Id = dto.Id};
                     _context.Users.Add(user);
                     return user;
                 });
