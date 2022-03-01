@@ -22,8 +22,6 @@ public class WorkDto
     public int CountPerDivision { get; set; }
     public TimeSpan IntervalPerDivision { get; set; }
 
-    // public bool IsCanceled { get; set; }
-
     public bool IsCompleted { get; set; }
 
     public string? ErrorMessage { get; set; }

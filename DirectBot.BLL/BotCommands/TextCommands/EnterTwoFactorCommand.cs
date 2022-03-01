@@ -26,7 +26,7 @@ public class EnterTwoFactorCommand : ITextCommand
             return;
         }
 
-        await client.SendChatActionAsync(user!.Id, ChatAction.Typing);
+        await client.SendChatActionAsync(user.Id, ChatAction.Typing);
         var x = await serviceContainer.InstagramLoginService.EnterTwoFactorAsync(instagram, message.Text!);
         switch (x.Value)
         {
@@ -87,7 +87,7 @@ public class EnterTwoFactorCommand : ITextCommand
 
                 user.State = State.ChallengeRequired;
                 await client.SendTextMessageAsync(message.From!.Id,
-                    "Инстаграм просит подтверждение. Выбирете, каким образом вы хотите получить код:",
+                    "Инстаграм просит подтверждение. Выберите, каким образом вы хотите получить код:",
                     replyMarkup: key);
             }
                 break;

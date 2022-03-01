@@ -20,7 +20,7 @@ public class EnterEditInstagramDataCommand : ITextCommand
         {
             await client.SendTextMessageAsync(message.From!.Id,
                 "Ошибка. Попробуйте войти ещё раз.");
-            user!.State = State.Main;
+            user.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             return;
         }
@@ -43,7 +43,6 @@ public class EnterEditInstagramDataCommand : ITextCommand
         await serviceContainer.UserService.UpdateAsync(user);
         await client.SendTextMessageAsync(message.Chat.Id,
             "Инстаграм успешно изменён.", replyMarkup: InstagramLoginKeyboard.Activate(instagram.Id));
-        return;
     }
 
     public bool Compare(Message message, UserDto? user)

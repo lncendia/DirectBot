@@ -25,7 +25,7 @@ public class EnterPhoneNumberCommand : ITextCommand
             return;
         }
 
-        await client.SendChatActionAsync(user!.Id, ChatAction.Typing);
+        await client.SendChatActionAsync(user.Id, ChatAction.Typing);
         var result = await serviceContainer.InstagramLoginService.SubmitPhoneNumberAsync(instagram, message.Text!);
         if (result.Succeeded)
         {

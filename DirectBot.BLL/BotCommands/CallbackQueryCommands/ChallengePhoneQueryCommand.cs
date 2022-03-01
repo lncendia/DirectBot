@@ -34,7 +34,7 @@ public class ChallengePhoneQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user!.State = State.ChallengeRequiredAccept;
+        user.State = State.ChallengeRequiredAccept;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
             "Код отправлен. Введите код из сообщения.", replyMarkup: MainKeyboard.Main);

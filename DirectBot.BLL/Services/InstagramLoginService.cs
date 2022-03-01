@@ -8,6 +8,7 @@ using DirectBot.Core.Services;
 using InstagramApiSharp.API;
 using InstagramApiSharp.API.Builder;
 using InstagramApiSharp.Classes;
+using InstagramApiSharp.Logger;
 using Newtonsoft.Json;
 
 namespace DirectBot.BLL.Services;
@@ -38,7 +39,7 @@ public class InstagramLoginService : IInstagramLoginService
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
         var builder = InstaApiBuilder.CreateBuilder();
-        //builder.UseLogger(new DebugLogger(LogLevel.All));//TODO: Remove logger
+        builder.UseLogger(new DebugLogger(LogLevel.All)); //TODO: Remove logger
         if (instagram.Proxy != null)
         {
             try
@@ -67,6 +68,8 @@ public class InstagramLoginService : IInstagramLoginService
         await SaveDataAsync(instagram, instaApi);
         try
         {
+            if (!data.Succeeded && data.Value == InstaLoginResult.Success)
+                return Result<LoginResult>.Fail(data.Info.Message, LoginResult.Exception);
             return Result<LoginResult>.Ok((LoginResult) Enum.Parse(typeof(LoginResult), data.Value.ToString()));
         }
         catch (ArgumentException)
@@ -77,9 +80,18 @@ public class InstagramLoginService : IInstagramLoginService
 
     public async Task<IOperationResult> DeactivateAsync(InstagramDto instagram)
     {
-        var result = await (await BuildApiAsync(instagram)).LogoutAsync();
-        if (!result.Succeeded) return OperationResult.Fail(result.Info.Message);
-        return result.Value ? OperationResult.Ok() : OperationResult.Fail("Failed to log out of account");
+        try
+        {
+            var result = await (await BuildApiAsync(instagram)).LogoutAsync();
+            if (!result.Succeeded) return OperationResult.Fail(result.Info.Message);
+            return result.Value
+                ? OperationResult.Ok()
+                : OperationResult.Fail($"Не удалось выйти");
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Fail($"Не удалось выйти: {ex.Message}");
+        }
     }
 
     public async Task SendRequestsAfterLoginAsync(InstagramDto instagram)
@@ -90,7 +102,7 @@ public class InstagramLoginService : IInstagramLoginService
     private async Task<IInstaApi> BuildApiAsync(InstagramDto instagram)
     {
         if (instagram.Proxy == null) await _proxyService.SetProxyAsync(instagram);
-        var builder = InstaApiBuilder.CreateBuilder();//.UseLogger(new DebugLogger(LogLevel.All)); //TODO:Remove logger
+        var builder = InstaApiBuilder.CreateBuilder(); //.UseLogger(new DebugLogger(LogLevel.All)); //TODO:Remove logger
         if (instagram.Proxy != null)
         {
             try

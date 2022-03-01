@@ -40,7 +40,7 @@ public class ProxyRepository : IProxyRepository
             .FirstOrDefaultAsync(proxy => proxy.Id == id);
 
     public Task<ProxyDto?> GetRandomProxyAsync() =>
-        _context.Proxies.OrderBy(x => EF.Functions.Random()).ProjectTo<ProxyDto>(_mapper.ConfigurationProvider)
+        _context.Proxies.OrderBy(x => Guid.NewGuid()).ProjectTo<ProxyDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync();
 
     public Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query)

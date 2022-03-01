@@ -114,6 +114,10 @@ public class ActiveInstagramQueryCommand : ICallbackQueryCommand
             }
                 break;
             case LoginResult.Exception:
+                user.CurrentInstagram = null;
+                await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
+                    $"Ошибка при отправке запроса: {result.ErrorMessage}. Попробуйте позже.");
+                break;
             case LoginResult.CheckpointLoggedOut:
             default:
                 user.CurrentInstagram = null;
@@ -121,7 +125,7 @@ public class ActiveInstagramQueryCommand : ICallbackQueryCommand
                     "Ошибка при отправке запроса. Попробуйте войти ещё раз!");
                 break;
         }
-
+        
         await serviceContainer.UserService.UpdateAsync(user);
     }
 

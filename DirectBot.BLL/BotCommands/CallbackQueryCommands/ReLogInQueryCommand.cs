@@ -40,6 +40,7 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
         await serviceContainer.UserService.UpdateAsync(user);
 
         await serviceContainer.InstagramLoginService.DeactivateAsync(instagram);
+        user.CurrentInstagram.IsActive = false;
         instagram.IsActive = false;
         instagram.StateData = null;
         instagram.TwoFactorLoginInfo = null;
@@ -47,12 +48,13 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
         instagram.Proxy = null;
         await serviceContainer.InstagramService.UpdateAsync(instagram);
 
+
         await client.SendChatActionAsync(user.Id, ChatAction.Typing);
         var result = await serviceContainer.InstagramLoginService.ActivateAsync(instagram);
         if (!result.Succeeded)
         {
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                $"Ну удалось активировать инстаграм: {result.ErrorMessage}.");
+                $"Не удалось активировать инстаграм: {result.ErrorMessage}.");
             return;
         }
 
@@ -131,7 +133,7 @@ public class ReLogInQueryCommand : ICallbackQueryCommand
 
                 user.State = State.ChallengeRequired;
                 await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
-                    "Инстаграм просит подтверждение. Выбирете, каким образом вы хотите получить код:",
+                    "Инстаграм просит подтверждение. Выберите, каким образом вы хотите получить код:",
                     replyMarkup: key);
             }
                 break;

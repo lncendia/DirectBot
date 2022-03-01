@@ -21,9 +21,6 @@ public class SubscribeRepository : ISubscribeRepository
         _mapper = GetMapper();
     }
 
-    public Task<List<SubscribeDto>> GetAllAsync() =>
-        _context.Subscribes.ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider).ToListAsync();
-
     public async Task AddOrUpdateAsync(SubscribeDto entity)
     {
         var u = _mapper.Map<Subscribe>(entity);
