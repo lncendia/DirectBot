@@ -21,8 +21,8 @@ public class BillQueryCommand : ICallbackQueryCommand
                     $"Произошла ошибка при добавлении платежа: {result.ErrorMessage}.");
             }
 
-            int count = (int) (payment.Value!.Cost / serviceContainer.Configuration.Cost);
-            for (int i = 0; i < count; i++)
+            var count = (int) (payment.Value!.Cost / serviceContainer.Configuration.Cost);
+            for (var i = 0; i < count; i++)
             {
                 var subscribe = new SubscribeDto
                 {

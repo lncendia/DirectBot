@@ -33,7 +33,7 @@ public class WorkService : IWorkService
         }
     }
 
-    public async Task<IOperationResult> UpdateWithoutStatusAsync(WorkDto entity)
+    public async Task<IOperationResult> UpdateWorkInfoAsync(WorkDto entity)
     {
         try
         {

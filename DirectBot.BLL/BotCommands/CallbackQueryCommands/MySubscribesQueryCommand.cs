@@ -34,7 +34,7 @@ public class MySubscribesQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        string paymentsString = string.Join("\n\n", payments.Select(payment =>
+        var paymentsString = string.Join("\n\n", payments.Select(payment =>
             $"Подписка №<code>{payment.Id}</code>\nДата окончания: <code>{payment.EndSubscribe.ToString("g")}</code>"));
 
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId, paymentsString, ParseMode.Html,

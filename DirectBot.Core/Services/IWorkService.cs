@@ -5,7 +5,7 @@ namespace DirectBot.Core.Services;
 
 public interface IWorkService : IService<WorkDto, int>
 {
-    public Task<IOperationResult> UpdateWithoutStatusAsync(WorkDto entity);
+    public Task<IOperationResult> UpdateWorkInfoAsync(WorkDto entity);
     Task<WorkDto?> GetUserWorksAsync(long id, int page);
     Task<bool> HasActiveWorksAsync(int id);
     Task<int> GetInstagramsCountAsync(int id);

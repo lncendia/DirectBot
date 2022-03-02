@@ -23,7 +23,7 @@ public class BillService : IBillService
     {
         try
         {
-            BillPaymentsClient client = BillPaymentsClientFactory.Create(_configuration.PaymentToken);
+            var client = BillPaymentsClientFactory.Create(_configuration.PaymentToken);
             var response = await client.CreateBillAsync(
                 new CreateBillInfo
                 {

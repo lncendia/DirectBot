@@ -31,7 +31,7 @@ public class BackgroundJobService : IBackgroundJobService
         if (!work.Instagrams.All(dto => dto.IsActive) || !work.Instagrams.Any())
         {
             work.ErrorMessage = "Инстаграмы не активны.";
-            await _workService.UpdateWithoutStatusAsync(work);
+            await _workService.UpdateWorkInfoAsync(work);
             return;
         }
 
@@ -43,12 +43,12 @@ public class BackgroundJobService : IBackgroundJobService
             if (result.Succeeded)
             {
                 work.InstagramPks = result.Value!;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
             }
             else
             {
                 work.ErrorMessage = result.ErrorMessage;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
                 return;
             }
         }
@@ -65,12 +65,12 @@ public class BackgroundJobService : IBackgroundJobService
             if (result.Succeeded)
             {
                 work.InstagramPks = result.Value!;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
             }
             else
             {
                 work.ErrorMessage = result.ErrorMessage;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
                 return new List<WorkDto>();
             }
         }
@@ -89,7 +89,7 @@ public class BackgroundJobService : IBackgroundJobService
             if (!result.Succeeded)
             {
                 work.ErrorMessage = result.ErrorMessage;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
                 continue;
             }
 
@@ -107,7 +107,7 @@ public class BackgroundJobService : IBackgroundJobService
             if (!result.Succeeded)
             {
                 work.ErrorMessage = result.ErrorMessage;
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
             }
             else
                 workDtos.Add(workDto);
@@ -147,7 +147,7 @@ public class BackgroundJobService : IBackgroundJobService
 
 
         var rnd = new Random();
-        int count = work.CountSuccess + work.CountErrors;
+        var count = work.CountSuccess + work.CountErrors;
         while (count < work.InstagramPks.Count)
         {
             await Task.Delay(TimeSpan.FromSeconds(rnd.Next(work.LowerInterval, work.UpperInterval)), token);
@@ -155,18 +155,18 @@ public class BackgroundJobService : IBackgroundJobService
             if (instagrams.Count == 0)
             {
                 work.ErrorMessage = "Из-за большого количества ошибок работа остановлена.";
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
                 break;
             }
 
             var pks = work.InstagramPks.Skip(count).Take(instagrams.Count).ToList();
             count += pks.Count;
-            for (int i = 0; i < pks.Count; i++)
+            for (var i = 0; i < pks.Count; i++)
             {
                 var result = await _mailingService.SendMessageAsync(instagrams[i].dto,
                     _messageParser.Generate(text, vocabularies), pks[i]);
                 HandleResult(result, work, instagrams[i]);
-                await _workService.UpdateWithoutStatusAsync(work);
+                await _workService.UpdateWorkInfoAsync(work);
             }
 
             instagrams.RemoveAll(inst => inst.Item2 == 5);
@@ -191,7 +191,7 @@ public class BackgroundJobService : IBackgroundJobService
         {
             work.CountErrors++;
             inst.Item2++;
-            work.ErrorMessage = result.ErrorMessage!;
+            work.ErrorMessage = $"{inst.Item1.Username}: {result.ErrorMessage!}";
         }
         else
         {

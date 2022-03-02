@@ -53,6 +53,7 @@ public class UpdateHandler : IUpdateHandler<Update>
 
         //Do not depend on the state
         new HelpCommand(),
+        new OurProjectsCommand(),
         new InstructionCommand(),
         new PaymentCommand(),
         new WorkCommand(),

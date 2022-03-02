@@ -13,9 +13,9 @@ public class EnterSubscribeDataCommand : ITextCommand
     public async Task Execute(ITelegramBotClient client, UserDto? user, Message message,
         ServiceContainer serviceContainer)
     {
-        string[] data = message.Text!.Split(' ', 2);
+        var data = message.Text!.Split(' ', 2);
 
-        if (!long.TryParse(data[0], out long id))
+        if (!long.TryParse(data[0], out var id))
         {
             await client.SendTextMessageAsync(user!.Id, "Неверный Id. Попробуйте ещё раз.",
                 replyMarkup: MainKeyboard.Main);

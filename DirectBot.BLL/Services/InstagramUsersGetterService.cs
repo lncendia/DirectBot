@@ -88,7 +88,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
     private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromFollowingAsync(IInstaApi api,
         int count, CancellationToken token)
     {
-        double pageD = count / 50.0;
+        var pageD = count / 50.0;
         int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
         var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Following,
             countPerPage,
@@ -101,7 +101,7 @@ public class InstagramUsersGetterService : IInstagramUsersGetterService
     private async Task<Core.Interfaces.IResult<List<long>>> GetUsersFromFollowersAsync(IInstaApi api,
         int count, CancellationToken token)
     {
-        double pageD = count / 50.0;
+        var pageD = count / 50.0;
         int countPerPage = pageD >= 1 ? 50 : count, pageCount = (int) Math.Ceiling(pageD);
         var result = await api.GetUserFriendshipsAsync(api.GetLoggedUser().UserName, FriendshipStatus.Followers,
             countPerPage,

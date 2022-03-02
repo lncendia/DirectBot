@@ -44,7 +44,7 @@ public class SubscribeDeleter : ISubscribeDeleter
     private async Task<IOperationResult> NotifyAsync(SubscribeDto subscribeDto)
     {
         if (subscribeDto.User == null) return OperationResult.Fail("Отсутствуют необходимые данные.");
-        string workString =
+        var workString =
             $"Завершилась действие подписки №<code>{subscribeDto.Id}</code>\nПродлите её, нажав на кнопку.";
 
         try

@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.BLL", "DirectBot.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.Tests", "DirectBot.Tests\DirectBot.Tests.csproj", "{0AAFFAC4-D7BA-4996-87D6-7E64150DADD2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectBot.WEB", "DirectBot.WEB\DirectBot.WEB.csproj", "{88222E16-496F-429A-B904-96A45578D8BB}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,9 +36,5 @@ Global
 		{0AAFFAC4-D7BA-4996-87D6-7E64150DADD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AAFFAC4-D7BA-4996-87D6-7E64150DADD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AAFFAC4-D7BA-4996-87D6-7E64150DADD2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88222E16-496F-429A-B904-96A45578D8BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88222E16-496F-429A-B904-96A45578D8BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88222E16-496F-429A-B904-96A45578D8BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88222E16-496F-429A-B904-96A45578D8BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

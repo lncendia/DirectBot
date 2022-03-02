@@ -9,7 +9,7 @@ public class ProxyParser : IProxyParser
 {
     public IResult<List<ProxyDto>> GetProxies(string proxyList)
     {
-        string[] proxyArray = proxyList.Split(Environment.NewLine);
+        var proxyArray = proxyList.Split(Environment.NewLine);
         var list = new List<ProxyDto>();
         foreach (var proxyString in proxyArray)
         {

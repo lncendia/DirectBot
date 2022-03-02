@@ -24,25 +24,25 @@ public class MyInstagramsQueryCommand : ICallbackQueryCommand
         if (instagrams.Any())
         {
             var instagram = instagrams.First();
-            int count = instagram.Password.Length / 2;
+            var count = instagram.Password.Length / 2;
             var offsetLength = (instagram.Password.Length - count) / 2;
 
-            string password = (instagram.Password[..offsetLength] + new String('*', count) +
-                              instagram.Password[(offsetLength + count)..]).ToHtmlStyle();
+            var password = (instagram.Password[..offsetLength] + new String('*', count) +
+                            instagram.Password[(offsetLength + count)..]).ToHtmlStyle();
             await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,
                 $"Имя пользователя: <code>{instagram.Username.ToHtmlStyle()}</code>\nПароль: <code>{password}</code>", ParseMode.Html,
                 replyMarkup: InstagramLoginKeyboard.InstagramMain(instagram));
         }
 
 
-        for (int i = 1; i < instagrams.Count; i++)
+        for (var i = 1; i < instagrams.Count; i++)
         {
             var instagram = instagrams[i];
-            int count = instagram.Password.Length / 2;
+            var count = instagram.Password.Length / 2;
             var offsetLength = (instagram.Password.Length - count) / 2;
 
-            string password = instagram.Password[..offsetLength] + new String('*', count) +
-                              instagram.Password[(offsetLength + count)..];
+            var password = instagram.Password[..offsetLength] + new String('*', count) +
+                           instagram.Password[(offsetLength + count)..];
 
             await client.SendTextMessageAsync(query.From.Id,
                 $"Имя пользователя: <code>{instagram.Username.ToHtmlStyle()}</code>\nПароль: <code>{password}</code>", ParseMode.Html,

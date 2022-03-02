@@ -1,6 +1,5 @@
 using AutoMapper;
 using DirectBot.API.ViewModels.Proxy;
-using DirectBot.API.ViewModels.Subscribe;
 using DirectBot.Core.DTO;
 using DirectBot.Core.Models;
 using DirectBot.Core.Services;

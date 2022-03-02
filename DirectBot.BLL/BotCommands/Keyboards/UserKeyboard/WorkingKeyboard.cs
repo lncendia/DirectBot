@@ -9,6 +9,8 @@ public static class WorkingKeyboard
     private static readonly string[] Emodji =
         {"🏞", "🏔", "🏖", "🌋", "🏜", "🏕", "🌎", "🗽", "🌃", "☘", "🐲", "🌸", "🌓", "🍃", "☀", "☁"};
 
+    private static readonly Random Random = new();
+
     public static readonly InlineKeyboardMarkup Working = new(
         new List<List<InlineKeyboardButton>>
         {
@@ -31,7 +33,7 @@ public static class WorkingKeyboard
     {
         var accounts = instagrams.Select(inst => new List<InlineKeyboardButton>
         {
-            InlineKeyboardButton.WithCallbackData($"{Emodji[new Random().Next(0, Emodji.Length)]} {inst.Username}",
+            InlineKeyboardButton.WithCallbackData($"{Emodji[Random.Next(0, Emodji.Length)]} {inst.Username}",
                 $"select_{inst.Id}")
         }).ToList();
 

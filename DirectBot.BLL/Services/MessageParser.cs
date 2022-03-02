@@ -9,7 +9,7 @@ public class MessageParser : IMessageParser
     {
         var rnd = new Random();
         var finalString = string.Empty;
-        for (int i = 0; i < vocabularies.Count; i++)
+        for (var i = 0; i < vocabularies.Count; i++)
         {
             finalString += text[i] + vocabularies[i][rnd.Next(0, vocabularies[i].Count)];
         }

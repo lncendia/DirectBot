@@ -4,6 +4,7 @@ using DirectBot.Core.Enums;
 using DirectBot.Core.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 
 namespace DirectBot.BLL.BotCommands.TextCommands;
@@ -21,7 +22,8 @@ public class StartCommand : ITextCommand
                 new InputOnlineFile("CAACAgIAAxkBAAEDh2ZhwNXpm0Vikt-5J5yPWTbDPeUwvwAC-BIAAkJOWUoAAXOIe2mqiM0jBA"),
                 replyMarkup: MainKeyboard.MainReplyKeyboard);
             var t2 = client.SendTextMessageAsync(message.Chat.Id,
-                "Привет", replyMarkup: PaymentKeyboard.PaySubscribe);
+                "<b>Здравствуйте!</b>\n\nDirect рассылка - это бот для рассылки сообщений в директ Инстаграм.\n\nС помощь него Вы можете делать рассылку по хештегу, по подписчикам, по подпискам и по целевой аудитории через файл!",
+                ParseMode.Html, replyMarkup: PaymentKeyboard.PaySubscribe);
             await Task.WhenAll(t1, t2);
         }
         else

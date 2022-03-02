@@ -47,7 +47,7 @@ public class WorkDto
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        string workString =
+        var workString =
             $"Работа №<code>{Id}</code>\n{typeString}\n\n{usersTypeString}\nКоличество пользователей: <code>{CountUsers}</code>\nВремя начала: <code>{StartTime.ToString("g")}</code>\nИнстаграмы: <code>{string.Join(", ", Instagrams.Select(dto => dto.Username)).ToHtmlStyle()}</code>\nСообщение: <code>{Message?.ToHtmlStyle()}</code>\nИнтервал: <code>{LowerInterval}:{UpperInterval}</code>\nЗавершена: <code>{(IsCompleted ? "Да" : "Нет")}</code>\n";
         workString +=
             $"\nПользователей всего: <code>{(InstagramPks.Any() ? InstagramPks.Count : "Получение...")}</code>";

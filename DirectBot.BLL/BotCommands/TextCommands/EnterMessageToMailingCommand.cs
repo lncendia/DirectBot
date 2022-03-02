@@ -55,7 +55,7 @@ public class EnterMessageToMailingCommand : ITextCommand
         }
         catch (Exception)
         {
-            int exceptionsCount = task.Exception?.InnerExceptions.Count ?? 0;
+            var exceptionsCount = task.Exception?.InnerExceptions.Count ?? 0;
             await client.SendTextMessageAsync(user!.Id,
                 $"Сообщение было отправлено {users.Count - exceptionsCount} пользователю(ям). У {exceptionsCount} пользователя(ей) возникла ошибка. Вы в главном меню.");
         }

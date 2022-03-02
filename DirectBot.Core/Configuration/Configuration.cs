@@ -18,4 +18,8 @@ public class Configuration
 
     [Required(ErrorMessage = "The subscribe cost is not set")]
     public decimal Cost { get; set; }
+
+    [Required(ErrorMessage = "Projects are not set")]
+
+    public List<Project> Projects { get; set; } = null!;
 }

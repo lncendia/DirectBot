@@ -1,7 +1,7 @@
 ﻿@using DirectBot.Core.Configuration
 @inject Configuration _configuration
 @{
-    string controllerName = Context.Request.RouteValues["controller"]?.ToString() ?? String.Empty;
+    var controllerName = Context.Request.RouteValues["controller"]?.ToString() ?? String.Empty;
 }
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">

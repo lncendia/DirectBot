@@ -73,7 +73,7 @@ public class WorkerService : IWorkerService
         var work = await _workService.GetAsync(workId);
         if (work == null) return;
         var works = await _backgroundJobService.ProcessingDivideWorkAsync(work, token);
-        for (int i = 0; i < works.Count; i++)
+        for (var i = 0; i < works.Count; i++)
         {
             var result = await ScheduleWorkAsync(works[i], DateTimeOffset.Now.Add(work.IntervalPerDivision * i));
             if (!result.Succeeded)
@@ -85,7 +85,7 @@ public class WorkerService : IWorkerService
             }
             else work.CountSuccess++;
 
-            await _workService.UpdateWithoutStatusAsync(work);
+            await _workService.UpdateWorkInfoAsync(work);
         }
     }
 

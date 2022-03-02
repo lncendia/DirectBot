@@ -23,7 +23,7 @@ public class EnterOffsetCommand : ITextCommand
         }
 
         var data = message.Text!.Split(':');
-        if (data.Length != 2 || !int.TryParse(data[0], out int lower) || !int.TryParse(data[1], out int upper) ||
+        if (data.Length != 2 || !int.TryParse(data[0], out var lower) || !int.TryParse(data[1], out var upper) ||
             lower > upper || lower < 0 || upper < 0)
         {
             await client.SendTextMessageAsync(message.Chat.Id,
