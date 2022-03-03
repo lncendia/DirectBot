@@ -58,6 +58,18 @@ public class SubscribeRepository : ISubscribeRepository
         return searchQuery.Skip((query.Page - 1) * 30).Take(30).ProjectTo<SubscribeDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
+    
+    public Task<int> GetSubscribesCountAsync(SubscribeSearchQuery query)
+    {
+        var searchQuery = _context.Subscribes.AsQueryable();
+        if (query.UserId.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.UserId == query.UserId);
+        if (query.EndOfSubscribeLower.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.EndSubscribe >= query.EndOfSubscribeLower);
+        if (query.EndOfSubscribeUpper.HasValue)
+            searchQuery = searchQuery.Where(subscribe => subscribe.EndSubscribe <= query.EndOfSubscribeUpper);
+        return searchQuery.CountAsync();
+    }
 
     public Task<int> GetUserSubscribesCountAsync(long id) =>
         _context.Subscribes.Where(payment => payment.User.Id == id && payment.EndSubscribe > DateTime.UtcNow)

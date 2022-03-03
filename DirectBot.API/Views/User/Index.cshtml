@@ -2,6 +2,7 @@
 @model DirectBot.API.ViewModels.User.UserListViewModel
 @{
     ViewData["Title"] = "Пользователи";
+    int offset = (Model!.UserSearchViewModel!.Page - 1) * 30;
 }
 <div class="table-responsive pt-2">
     <table class="table table-sm table-hover table-bordered table-striped table-condensed text-center align-middle">
@@ -41,7 +42,7 @@
         @for (var i = 0; i < Model!.Users?.Count; i++)
         {
             <tr>
-                <th scope="row">@(i + 1)</th>
+                <th scope="row">@(i + 1 + offset)</th>
                 <td> @Model.Users[i].Id</td>
                 <td>@Model.Users[i].State</td>
                 <td>
@@ -107,7 +108,7 @@
         <li class="page-item active">
             <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@Model.UserSearchViewModel.Page" form="filter" disabled>
         </li>
-        @if (Model.UserSearchViewModel.Page * 30 < Model.Users?.Count)
+        @if (offset + 30 < Model.Count)
         {
             <li class="page-item">
                 <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="UserSearchViewModel!.Page" value="@(Model.UserSearchViewModel.Page + 1)" form="filter">

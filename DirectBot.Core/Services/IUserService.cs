@@ -8,4 +8,5 @@ public interface IUserService : IService<UserDto, long>
 {
     Task<List<UserLiteDto>> GetAllAsync();
     Task<List<UserLiteDto>> GetUsersAsync(UserSearchQuery query);
+    Task<int> GetUsersCountAsync(UserSearchQuery query);
 }

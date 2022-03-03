@@ -18,6 +18,8 @@ public class ProxyService : IProxyService
     }
 
     public Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query) => _proxyRepository.GetProxiesAsync(query);
+    
+    public Task<int> GetProxiesCountAsync(ProxySearchQuery query) => _proxyRepository.GetProxiesCountAsync(query);
 
     public async Task<IOperationResult> SetProxyAsync(InstagramDto instagram)
     {

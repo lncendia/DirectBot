@@ -8,4 +8,5 @@ public interface IUserRepository : IRepository<UserDto, long>
 {
     Task<List<UserLiteDto>> GetAllAsync();
     Task<List<UserLiteDto>> GetUsersAsync(UserSearchQuery query);
+    Task<int> GetUsersCountAsync(UserSearchQuery query);
 }

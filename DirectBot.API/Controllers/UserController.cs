@@ -29,6 +29,7 @@ public class UserController : Controller
         var query = _mapper.Map<UserSearchQuery>(model.UserSearchViewModel);
 
         model.Users = _mapper.Map<List<UserViewModel>>(await _userService.GetUsersAsync(query));
+        model.Count = await _userService.GetUsersCountAsync(query);
         if (model.UserSearchViewModel.Page != 1 && !model.Users.Any()) return RedirectToAction("Index");
         return View(model);
     }
@@ -57,7 +58,7 @@ public class UserController : Controller
                 {
                     message = "Пользователь не найден."
                 });
-        
+
         _mapper.Map(userViewModel, userDto);
         var result = await _userService.UpdateAsync(userDto);
 

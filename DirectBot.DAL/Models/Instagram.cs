@@ -9,7 +9,6 @@ public class Instagram
     public string? TwoFactorLoginInfo { get; set; }
     public string? ChallengeLoginInfo { get; set; }
     public bool IsActive { get; set; }
-    public bool IsSelected { get; set; }
 
     public long UserId { get; set; }
     public User User { get; set; } = null!;

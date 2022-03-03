@@ -1,6 +1,7 @@
 ﻿@model DirectBot.API.ViewModels.Proxy.ProxyListViewModel
 @{
     ViewData["Title"] = "Прокси";
+    int offset = (Model!.ProxySearchViewModel!.Page - 1) * 30;
 }
 <div>
     <a class="btn shadow-none btn-outline-dark" asp-action="Add">Добавить</a>
@@ -43,7 +44,7 @@
         @for (var i = 0; i < Model!.Proxies?.Count; i++)
         {
             <tr>
-                <th scope="row">@(i + 1)</th>
+                <th scope="row">@(i + 1 + offset)</th>
                 <td> @Model.Proxies[i].Host</td>
                 <td>@Model.Proxies[i].Port</td>
                 <td>@Model.Proxies[i].Login</td>
@@ -86,7 +87,7 @@
         <li class="page-item active">
             <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="ProxySearchViewModel!.Page" value="@Model.ProxySearchViewModel.Page" form="filter" disabled>
         </li>
-        @if (Model.ProxySearchViewModel.Page * 30 < Model.Proxies?.Count)
+        @if (offset + 30 < Model.Count)
         {
             <li class="page-item">
                 <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="ProxySearchViewModel!.Page" value="@(Model.ProxySearchViewModel.Page + 1)" form="filter">

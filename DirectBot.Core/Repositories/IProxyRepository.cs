@@ -8,4 +8,5 @@ public interface IProxyRepository : IRepository<ProxyDto, int>
 {
    Task<ProxyDto?> GetRandomProxyAsync();
    Task<List<ProxyDto>> GetProxiesAsync(ProxySearchQuery query);
+   Task<int> GetProxiesCountAsync(ProxySearchQuery query);
 }

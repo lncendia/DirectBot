@@ -59,6 +59,21 @@ public class ProxyRepository : IProxyRepository
             .ToListAsync();
     }
 
+    public Task<int> GetProxiesCountAsync(ProxySearchQuery query)
+    {
+        var searchQuery = _context.Proxies.AsQueryable();
+        if (!string.IsNullOrEmpty(query.Host))
+            searchQuery = searchQuery.Where(proxy => proxy.Host.Contains(query.Host));
+        if (query.Port.HasValue)
+            searchQuery = searchQuery.Where(proxy => proxy.Port == query.Port);
+        if (!string.IsNullOrEmpty(query.Login))
+            searchQuery = searchQuery.Where(proxy => proxy.Login.Contains(query.Login));
+        if (!string.IsNullOrEmpty(query.Password))
+            searchQuery = searchQuery.Where(proxy => proxy.Host.Contains(query.Password));
+
+        return searchQuery.CountAsync();
+    }
+
 
     private IMapper GetMapper()
     {

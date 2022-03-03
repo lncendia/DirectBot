@@ -16,6 +16,9 @@ public class SubscribeService : ISubscribeService
 
     public Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query) =>
         _subscribeRepository.GetSubscribesAsync(query);
+    
+    public Task<int> GetSubscribesCountAsync(SubscribeSearchQuery query) =>
+        _subscribeRepository.GetSubscribesCountAsync(query);
 
     public Task<List<SubscribeDto>> GetExpiredSubscribes() => _subscribeRepository.GetExpiredSubscribes();
 

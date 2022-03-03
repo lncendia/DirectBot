@@ -62,6 +62,17 @@ public class UserRepository : IUserRepository
             .ToListAsync();
     }
 
+    public Task<int> GetUsersCountAsync(UserSearchQuery query)
+    {
+        var searchQuery = _context.Users.AsQueryable()
+            .Where(user => user.IsAdmin == query.IsAdmin && user.IsBanned == query.IsBanned);
+        if (query.UserId.HasValue)
+            searchQuery = searchQuery.Where(user => user.Id == query.UserId);
+        if (query.State.HasValue)
+            searchQuery = searchQuery.Where(user => user.State == query.State);
+        return searchQuery.CountAsync();
+    }
+
     private IMapper GetMapper()
     {
         return new Mapper(new MapperConfiguration(expr =>

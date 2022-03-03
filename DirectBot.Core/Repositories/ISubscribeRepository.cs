@@ -8,6 +8,7 @@ public interface ISubscribeRepository : IRepository<SubscribeDto, int>
 {
     Task<List<SubscribeDto>> GetUserSubscribesAsync(long id, int page);
     Task<List<SubscribeDto>> GetSubscribesAsync(SubscribeSearchQuery query);
+    Task<int> GetSubscribesCountAsync(SubscribeSearchQuery query);
     Task<int> GetUserSubscribesCountAsync(long id);
     Task<List<SubscribeDto>> GetExpiredSubscribes();
 }

@@ -87,4 +87,67 @@
       <_ContentIncludedByDefault Remove="wwwroot\lib\popper\dist\js\popper.min.js" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="obj\Debug\net6.0\apphost.exe" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.assets.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.csproj.CopyComplete" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.csproj.CoreCompileInputs.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.dll" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.genruntimeconfig.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.MvcApplicationPartsAssemblyInfo.cache" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.pdb" />
+      <Content Include="obj\Debug\net6.0\DirectBot.API.RazorAssemblyInfo.cache" />
+      <Content Include="obj\Debug\net6.0\ref\DirectBot.API.dll" />
+      <Content Include="obj\Debug\net6.0\staticwebassets.build.json" />
+      <Content Include="obj\Debug\net6.0\staticwebassets.development.json" />
+      <Content Include="obj\DirectBot.API.csproj.EntityFrameworkCore.targets" />
+      <Content Include="obj\DirectBot.API.csproj.nuget.dgspec.json" />
+      <Content Include="obj\DirectBot.API.csproj.nuget.g.props" />
+      <Content Include="obj\DirectBot.API.csproj.nuget.g.targets" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.nuget.cache" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\Release\net6.0\apphost.exe" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.assets.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.csproj.CopyComplete" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.csproj.CoreCompileInputs.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.deps.json" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.dll" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.genruntimeconfig.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.MvcApplicationPartsAssemblyInfo.cache" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.pdb" />
+      <Content Include="obj\Release\net6.0\DirectBot.API.RazorAssemblyInfo.cache" />
+      <Content Include="obj\Release\net6.0\PublishOutputs.a618ff3dd8.txt" />
+      <Content Include="obj\Release\net6.0\ref\DirectBot.API.dll" />
+      <Content Include="obj\Release\net6.0\staticwebassets.build.json" />
+      <Content Include="obj\Release\net6.0\staticwebassets.development.json" />
+      <Content Include="obj\Release\net6.0\staticwebassets.publish.json" />
+      <Content Include="obj\rider.project.restore.info" />
+      <Content Include="obj\staticwebassets.pack.sentinel" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Debug\net6.0\DirectBot.API.AssemblyInfo.cs" />
+      <Compile Include="obj\Debug\net6.0\DirectBot.API.GlobalUsings.g.cs" />
+      <Compile Include="obj\Debug\net6.0\DirectBot.API.RazorAssemblyInfo.cs" />
+      <Compile Include="obj\Release\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Release\net6.0\DirectBot.API.AssemblyInfo.cs" />
+      <Compile Include="obj\Release\net6.0\DirectBot.API.GlobalUsings.g.cs" />
+      <Compile Include="obj\Release\net6.0\DirectBot.API.RazorAssemblyInfo.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="obj\Debug\net6.0\staticwebassets" />
+      <Folder Include="obj\Release\net6.0\staticwebassets" />
+    </ItemGroup>
+
 </Project>

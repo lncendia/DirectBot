@@ -30,6 +30,7 @@ public class ProxyController : Controller
         var query = _mapper.Map<ProxySearchQuery>(model.ProxySearchViewModel);
 
         model.Proxies = _mapper.Map<List<ProxyViewModel>>(await _proxyService.GetProxiesAsync(query));
+        model.Count = await _proxyService.GetProxiesCountAsync(query);
         if (model.ProxySearchViewModel.Page != 1 && !model.Proxies.Any()) return RedirectToAction("Index");
         return View(model);
     }
@@ -96,6 +97,7 @@ public class ProxyController : Controller
                 message = $"Ошибка при удалении прокси: {result.ErrorMessage}."
             });
     }
+
     private IMapper GetMapper()
     {
         return new Mapper(new MapperConfiguration(expr =>

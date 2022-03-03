@@ -34,6 +34,7 @@ public class SubscribeController : Controller
         var query = _mapper.Map<SubscribeSearchQuery>(model.SubscribeSearchViewModel);
 
         model.Subscribes = _mapper.Map<List<SubscribeViewModel>>(await _subscribeService.GetSubscribesAsync(query));
+        model.Count = await _subscribeService.GetSubscribesCountAsync(query);
         if (model.SubscribeSearchViewModel.Page != 1 && !model.Subscribes.Any()) return RedirectToAction("Index");
         return View(model);
     }

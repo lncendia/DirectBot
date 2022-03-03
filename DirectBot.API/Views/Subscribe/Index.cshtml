@@ -1,6 +1,7 @@
 ﻿@model DirectBot.API.ViewModels.Subscribe.SubscribeListViewModel
 @{
     ViewData["Title"] = "Подписки";
+    int offset = (Model!.SubscribeSearchViewModel!.Page - 1) * 30;
 }
 
 <div class="d-inline-block pe-2">
@@ -45,7 +46,7 @@
         @for (var i = 0; i < Model!.Subscribes?.Count; i++)
         {
             <tr>
-                <th scope="row">@(i + 1)</th>
+                <th scope="row">@(i + 1 + offset)</th>
                 <td>@Model!.Subscribes![i].UserId</td>
                 <td>@Model.Subscribes[i].EndSubscribe.ToString("g")</td>
                 <td>
@@ -86,7 +87,7 @@
         <li class="page-item active">
             <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@Model.SubscribeSearchViewModel.Page" form="filter" disabled>
         </li>
-        @if (Model.SubscribeSearchViewModel.Page * 30 < Model.Subscribes?.Count)
+        @if (offset + 30 < Model.Count)
         {
             <li class="page-item">
                 <input type="submit" class="page-link shadow-none" autocomplete="off" asp-for="SubscribeSearchViewModel!.Page" value="@(Model.SubscribeSearchViewModel.Page + 1)" form="filter">

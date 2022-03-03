@@ -1,3 +1,4 @@
+using System;
 using DirectBot.BLL.HangfireAuthorization;
 using DirectBot.BLL.Services;
 using DirectBot.Core.Configuration;
@@ -7,7 +8,11 @@ using DirectBot.DAL.Data;
 using DirectBot.DAL.Repositories;
 using Hangfire;
 using Hangfire.SqlServer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Telegram.Bot;
@@ -54,8 +59,6 @@ builder.Services.AddScoped<ISubscribeDeleter, SubscribeDeleter>();
 builder.Services.AddScoped<IWorkDeleter, WorkDeleter>();
 builder.Services.AddScoped<IMessageParser, MessageParser>();
 builder.Services.AddScoped<IProxyParser, ProxyParser>();
-
-
 builder.Services.AddOptions<Configuration>().Bind(builder.Configuration.GetSection("BotConfiguration"))
     .ValidateDataAnnotations();
 builder.Services.AddScoped(sp => sp.GetService<IOptions<Configuration>>()!.Value);
@@ -73,8 +76,8 @@ builder.Services.AddHangfire((_, configuration) =>
             SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
             QueuePollInterval = TimeSpan.Zero,
             UseRecommendedIsolationLevel = true,
-            DisableGlobalLocks = true, // Migration to Schema 7 is required
-            PrepareSchemaIfNecessary = true
+            DisableGlobalLocks = true,
+            PrepareSchemaIfNecessary = true,
         });
 
     configuration.UseSerializerSettings(new JsonSerializerSettings
@@ -87,8 +90,7 @@ builder.Services.AddHangfire((_, configuration) =>
         () => _.CreateScope().ServiceProvider.GetService<IWorkDeleter>()!.StartDeleteAsync(),
         Cron.Daily);
 });
-builder.Services.AddHangfireServer();
-
+builder.Services.AddHangfireServer(options => options.WorkerCount = Environment.ProcessorCount * 15);
 
 var app = builder.Build();
 
