@@ -28,8 +28,7 @@ public class EditInstagramQueryCommand : ICallbackQueryCommand
             return;
         }
 
-        user.CurrentInstagram = new InstagramLiteDto {Id = instagram.Id, Username = instagram.Username};
-        await serviceContainer.UserService.UpdateAsync(user);
+        user.CurrentInstagram = serviceContainer.Mapper.Map<InstagramLiteDto>(instagram);
         user.State = State.EnterEditInstagramData;
         await serviceContainer.UserService.UpdateAsync(user);
         await client.EditMessageTextAsync(query.From.Id, query.Message!.MessageId,

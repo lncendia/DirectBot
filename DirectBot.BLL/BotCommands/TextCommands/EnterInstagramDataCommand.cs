@@ -26,12 +26,12 @@ public class EnterInstagramDataCommand : ITextCommand
         {
             Username = data[0],
             Password = data[1],
-            User = new UserLiteDto {Id = user!.Id}
+            User = serviceContainer.Mapper.Map<UserLiteDto>(user)
         };
         var result = await serviceContainer.InstagramService.AddAsync(instagram);
         if (result.Succeeded)
         {
-            user.State = State.Main;
+            user!.State = State.Main;
             await serviceContainer.UserService.UpdateAsync(user);
             await client.SendTextMessageAsync(message.Chat.Id,
                 "Инстаграм успешно добавлен.", replyMarkup: InstagramLoginKeyboard.Activate(instagram.Id));
